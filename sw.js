@@ -1,0 +1,24 @@
+/* Lumos · service worker. Cada versión cambia el nombre de la caché para que el móvil se actualice solo. */
+const CACHE = 'lumos-1.0.0';
+const ARCHIVOS = [
+  './', './index.html', './manifest.webmanifest', './css/lumos.css?v=1.0.0',
+  './js/base.js?v=1.0.0', './js/palabras.js?v=1.0.0', './js/graficas.js?v=1.0.0', './js/app.js?v=1.0.0',
+  './js/p_inicio.js?v=1.0.0', './js/p_hoy.js?v=1.0.0', './js/p_animo.js?v=1.0.0', './js/p_recursos.js?v=1.0.0',
+  './js/p_patrones.js?v=1.0.0', './js/p_cuidar.js?v=1.0.0', './js/demo.js?v=1.0.0',
+  './fuentes/Gloock-Regular.ttf', './fuentes/WorkSans-Regular.ttf', './fuentes/WorkSans-Bold.ttf',
+  './iconos/icono-180.png', './iconos/icono-192.png', './iconos/icono-512.png', './iconos/icono-512-maskable.png'
+];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ARCHIVOS)).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('lumos-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', e => {
+  const r = e.request;
+  if (r.method !== 'GET' || new URL(r.url).origin !== location.origin) return;
+  e.respondWith(caches.match(r, { ignoreSearch: r.mode === 'navigate' }).then(hit => hit || fetch(r).then(res => {
+    if (res.ok && res.type === 'basic') { const copia = res.clone(); caches.open(CACHE).then(c => c.put(r, copia)); }
+    return res;
+  }).catch(() => r.mode === 'navigate' ? caches.match('./index.html') : undefined)));
+});
