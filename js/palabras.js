@@ -1,4 +1,4 @@
-/* Lumos 1.0.0 · contenidos: palabras, niveles del ánimo, recursos */
+/* Lumos 1.1.0 · contenidos: palabras, niveles del ánimo, recursos */
 'use strict';
 /* Familias, de arriba abajo en el campo: tensión, energía, alegría, calma, bajón.
    Cada familia ocupa un tramo del espectro de color (t de 0 a 1). */
@@ -160,6 +160,7 @@ L.RECURSOS = {
       { t: 'Escribe lo que te preocupa', s: 'Todo, sin ordenar.', n: 3 }, { t: '¿Qué depende de ti?', s: 'Marca una cosa que sí puedes hacer.', n: 1 },
       { t: 'Ciérralo', s: 'Lo has apuntado. Puedes volver mañana a la misma hora.' }]
   },
+  'vaciar': { cat: 'pensamiento', nombre: 'Vaciar la cabeza', sub: 'Antes de dormir · a una caja hasta mañana', tipo: 'vaciar' },
   'trampas': { cat: 'pensamiento', nombre: 'Las trampas del pensamiento', sub: 'Dos minutos · conocerlas para verlas', tipo: 'lista', items: [] },
   'compasion': {
     cat: 'pensamiento', nombre: 'Hablarte con cariño', sub: 'Dos minutos · en vez de exigirte', tipo: 'pasos', pasos: [

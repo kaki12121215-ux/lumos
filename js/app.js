@@ -1,4 +1,4 @@
-/* Lumos 1.0.0 · arranque, pestañas y tema */
+/* Lumos 1.1.0 · arranque, pestañas y tema */
 'use strict';
 L.TABS = [['hoy', 'Hoy'], ['animo', 'Ánimo'], ['recursos', 'Recursos'], ['patrones', 'Patrones']];
 L.vistas = {};      /* render de cada pestaña: (el, {primera}) => acciones */
@@ -77,8 +77,31 @@ L.refrescarRaiz = () => { if ($('#lm-vista')) L.pintarVista(false); };
 L.barra = v => $('.lm-barra')?.classList.toggle('lm-oculta', !v);
 
 /* ============================== ARRANQUE ============================== */
+/* Enlaces desde Atajos: ?abrir=…, ?sueno=…&pasos=… (los datos se guardan en silencio) */
+L.leerURL = () => {
+  const q = new URLSearchParams(location.search); if (![...q.keys()].length) return;
+  history.replaceState(null, '', location.pathname);
+  if (!L.d.perfil) return;
+  const f = /^\d{4}-\d{2}-\d{2}$/.test(q.get('fecha') || '') ? q.get('fecha') : L.hoy();
+  const num = k => { const v = parseFloat(String(q.get(k) || '').replace(',', '.')); return isFinite(v) ? v : null; };
+  let sueno = num('sueno'), pasos = num('pasos');
+  if (sueno != null) { if (sueno > 24) sueno = sueno / 60; sueno = Math.round(Math.max(0, Math.min(16, sueno)) * 2) / 2; }
+  if (sueno != null || pasos != null) {
+    L.d.salud = L.d.salud || {}; const r = L.d.salud[f] = L.d.salud[f] || {};
+    if (sueno != null) r.sueno = sueno; if (pasos != null) r.pasos = Math.round(pasos);
+    const a = L.d.animo.find(x => x.fecha === f); if (a && a.sueno == null && sueno != null) a.sueno = sueno;
+    L.guardar();
+  }
+  const ab = q.get('abrir'); if (ab) L.abrirPendiente = ab;
+};
+L.abrirDestino = () => {
+  const ab = L.abrirPendiente; L.abrirPendiente = null; if (!ab) return;
+  const m = { apuntar: () => L.abrir('apuntar', { flujo: 'emo' }, 'sube'), manana: () => L.abrir('manana', {}, 'sube'), noche: () => L.abrir('noche', {}, 'sube'),
+    escala: () => L.abrir('nivel', { flujo: 'escala' }, 'sube'), ayuda: () => L.abrir('ayuda'), vaciar: () => L.abrir('vaciar', {}, 'sube'), hechos: () => L.abrir('hechos', {}, 'sube') };
+  setTimeout(() => m[ab]?.(), 350);
+};
 L.iniciar = async () => {
-  L.cargar(); L.aplicarTema();
+  L.cargar(); L.leerURL(); L.aplicarTema();
   const app = $('#lm-app');
   const p = L.d.perfil;
   if (!p) { L.montarBienvenida(); }
@@ -92,6 +115,7 @@ L.alEntrar = () => {
   const dias = ult ? L.difDias(ult, new Date()) : 0;
   p.ultimaVisita = Date.now(); L.guardar();
   if (dias >= 7) L.abrir('holaDeNuevo', { dias }, 'fundido');
+  else L.abrirDestino();
 };
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && L.d?.perfil) { L.refrescarRaiz(); } });
 

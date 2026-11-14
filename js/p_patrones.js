@@ -1,4 +1,4 @@
-/* Lumos 1.0.0 · patrones y diario */
+/* Lumos 1.1.0 · patrones y diario */
 'use strict';
 L.estPat = { vista: 'Mes', mes: 0, anio: 0, q: '', dias: 45 };
 const COLOR_INF = { Descanso: L.C.cal, Amistades: L.C.ale, Ejercicio: L.C.ver, Pareja: L.C.ene, Familia: L.C.lil, 'Tiempo libre': L.C.baj, Salud: L.C.cal, Comida: L.C.ver, 'El tiempo': L.C.baj, Trabajo: L.C.ene, 'Dormir poco': L.C.ten };
@@ -35,6 +35,7 @@ L.pantallas.diario = (el, o, capa) => {
   };
 };
 
+L.mesHistoria = () => { const d = new Date(), ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; return d.getDate() >= 20 && L.datosMes(ym).dias >= 5 ? ym : L.mesAnterior(); };
 /* ============================== RESUMEN DE LA SEMANA ============================== */
 L.resumenSemana = () => {
   const l = L.lunes(new Date()), ini = l.getTime(), antes = L.mas(l, -7).getTime();
@@ -88,7 +89,9 @@ L.vistas.patrones = (el, { primera }) => {
     <h1 class="lm-t1" data-e style="margin-bottom:14px">Patrones</h1>
     <div data-e>${L.segmentado(['Mes', 'Año', 'Diario'], E.vista, 'vista')}</div>
     <div id="lm-pc">${cuerpo}</div>
-    ${E.vista !== 'Diario' ? `<div data-e style="margin-top:12px">${L.li(L.pt(L.C.ver, 38), 'Qué acompaña tus días', 'Lo que suele estar en los días agradables y en los difíciles', 'data-a="acomp"')}</div>` : ''}
+    ${E.vista !== 'Diario' ? `<div data-e style="margin-top:12px">${L.li(L.pt(L.C.ver, 38), 'Qué acompaña tus días', 'Lo que suele estar en los días agradables y en los difíciles', 'data-a="acomp"')}</div>
+      <div data-e>${L.li(L.pt(L.C.ale, 38), 'Lo bueno de la semana', 'Cosas buenas, momentos y lo que sí hiciste', 'data-a="semana"')}</div>
+      <div data-e>${L.li(L.pt(L.C.lil, 38), `Tu ${L.datosMes(L.mesHistoria()).nombre} en una historia`, 'Tus palabras, tu ánimo y tus momentos del mes', 'data-a="historia"')}</div>` : ''}
   </div>`;
   L.mancha($('[data-seg]', el), true);
   const pq = $('#lm-pq', el); if (pq) pq.addEventListener('input', () => { E.q = pq.value.trim(); $('#lm-pdl', el).innerHTML = L.htmlDiario(E.q, E.dias); });
@@ -104,6 +107,7 @@ L.vistas.patrones = (el, { primera }) => {
     vista: t => { if (E.vista === t.dataset.v) return; L.elegirSeg(t); E.vista = t.dataset.v; setTimeout(cambiar, 60); },
     mes: t => { E.mes += +t.dataset.v; cambiar(); }, anio: t => { E.anio += +t.dataset.v; cambiar(); },
     dia: t => L.hojaDia(t.dataset.f), acomp: () => L.abrir('acompana'),
+    semana: () => L.abrir('semana', { off: 0 }), historia: () => L.abrir('historia', { mes: L.mesHistoria() }, 'fundido'),
     entrada: t => L.abrir('entrada', { id: t.dataset.id }),
     mas: () => { E.dias += 60; $('#lm-pdl', el).innerHTML = L.htmlDiario(E.q, E.dias); }
   };
@@ -111,7 +115,8 @@ L.vistas.patrones = (el, { primera }) => {
 L.hojaDia = f => {
   const es = L.emocionesDe(f), an = L.mapaAnimo()[f], d = L.deIso(f);
   const h = L.hoja(`<h2 data-e>${L.fechaLarga(d)}</h2>
-    ${an ? `<div class="lm-fila" data-e style="margin:8px 0 6px">${L.pt(L.NIV[an.nivel].c, 34)}<div><b>${L.NIV[an.nivel].nombre}</b><small class="lm-nota-p">${an.sueno != null ? L.num(an.sueno) + ' h de sueño, ' : ''}${an.medicacion ? 'medicación tomada' : 'sin medicación'}</small></div></div>` : ''}
+    ${an ? `<div class="lm-fila" data-e style="margin:8px 0 6px">${L.pt(L.NIV[an.nivel].c, 34)}<div><b>${L.NIV[an.nivel].nombre}</b><small class="lm-nota-p">${an.sueno != null ? L.num(an.sueno) + ' h de sueño, ' : ''}${an.medicacion ? 'medicación tomada' : 'sin medicación'}${L.d.salud?.[f]?.pasos != null ? ', ' + L.d.salud[f].pasos.toLocaleString('es-ES') + ' pasos' : ''}</small></div></div>` : ''}
+    ${(L.d.hechos.find(h => h.fecha === f)?.cosas || []).length ? `<p class="lm-nota-p" data-e style="margin:4px 0 8px">Lo que sí hiciste: ${L.esc(L.d.hechos.find(h => h.fecha === f).cosas.join(', ').toLowerCase())}.</p>` : ''}
     ${es.length ? es.map(e => `<button class="lm-ent tq tq-g" data-a="ver" data-id="${e.id}" data-e style="width:100%;text-align:left">${L.pt(L.colorDe(e.palabra), 34)}<div><p>${L.esc(e.palabra)}</p><small>A las ${L.hora(e.ts)}${(e.influencias || []).length ? ', por ' + e.influencias.map(L.minus).join(' y ') : ''}</small></div></button>`).join('')
       : `<p class="lm-sub" data-e style="margin:6px 0 10px">${an ? 'Ninguna emoción apuntada.' : 'Un día sin nada apuntado. También vale.'}</p>`}
     <div style="height:8px"></div>`, { ver: (t, e, c) => { c(); L.abrir('entrada', { id: t.dataset.id }); } });
@@ -124,12 +129,15 @@ L.pantallas.acompana = (el, o, capa) => {
   let del = L.d.emociones.filter(e => e.ts >= ini.getTime()); if (del.length < 6) del = L.d.emociones.filter(e => e.ts >= Date.now() - 30 * 864e5);
   const cnt = {}; del.forEach(e => cnt[e.palabra] = (cnt[e.palabra] || 0) + 1);
   const top = Object.entries(cnt).sort((x, y) => y[1] - x[1]).slice(0, 9), mx = top[0]?.[1] || 1;
+  const cz = {}, conC = L.d.emociones.filter(e => (e.cuerpo || []).length && e.ts >= Date.now() - 90 * 864e5); conC.forEach(e => e.cuerpo.forEach(z => cz[z] = (cz[z] || 0) + 1));
+  const cuerpoBar = Object.entries(cz).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => [k, v / Math.max(1, conC.length)]);
   const barras = l => l.map(([k, v]) => `<div class="lm-br" data-e><span>${k}</span><div class="lm-bt"><i style="width:${Math.round(Math.max(.08, v) * 100)}%;background:${COLOR_INF[k] || L.C.cal}"></i></div></div>`).join('');
   el.innerHTML = `${L.top('atras')}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra">
     <h1 class="lm-t1" data-e>Qué acompaña tus días</h1>
     ${ok ? `<p class="lm-sub" data-e style="margin-bottom:6px">De los últimos tres meses. No es causa y efecto: solo lo que suele ir junto.</p>
       <h3 class="lm-sec" data-e>Suele estar en tus días agradables</h3>${a.buenos.length ? barras(a.buenos) : '<p class="lm-nota-p" data-e>Aún no hay bastantes días agradables con algo apuntado.</p>'}
       <h3 class="lm-sec" data-e>Suele estar en los difíciles</h3>${a.malos.length ? barras(a.malos) : '<p class="lm-nota-p" data-e>Aún no hay bastantes días difíciles con algo apuntado.</p>'}
+      ${cuerpoBar.length ? `<h3 class="lm-sec" data-e>Dónde lo notas más</h3>${barras(cuerpoBar)}` : ''}
       <h3 class="lm-sec" data-e>Tus palabras del mes</h3><div class="lm-nube" data-e>${top.map(([w, n], i) => `<span style="font-size:${Math.round(15 + 21 * n / mx)}px;color:${L.textoDe(L.colorDe(w))}">${L.esc(w)}</span>`).join('')}</div>`
       : `<p class="lm-sub" data-e>Lo calculo cuando hay al menos una semana apuntada. Llevas ${L.enLetra(L.diasConDatos())} ${L.diasConDatos() === 1 ? 'día' : 'días'}.</p>`}
     ${ok ? '<p class="lm-nota-p" data-e style="margin-top:14px">Lo calculo cuando hay al menos una semana apuntada.</p>' : ''}

@@ -1,4 +1,4 @@
-/* Lumos 1.0.0 · recursos para el momento */
+/* Lumos 1.1.0 · recursos para el momento */
 'use strict';
 const colorCat = id => L.CATS.find(c => c.id === L.RECURSOS[id].cat).c;
 const deCat = cat => Object.entries(L.RECURSOS).filter(([, r]) => r.cat === cat);
@@ -27,10 +27,10 @@ L.pantallas.categoria = (el, o, capa) => {
     <h1 class="lm-t1" data-e>${c.nombre}</h1>
     <p class="lm-sub" data-e style="margin-bottom:16px">${{ respirar: 'Respirar más despacio le dice al cuerpo que puede bajar el ritmo.', cuerpo: 'Cuando la cabeza va muy rápido, el cuerpo te trae al presente.', pensamiento: 'Mirar lo que te dices, sin creértelo del todo.', moverse: 'Mover el cuerpo un poco cambia cómo te sientes.' }[o.cat] || ''}</p>
     ${lista.map(([id, r]) => { const a = ay.find(x => x.id === id); return `<div data-e>${L.li(L.pt(c.c, 38), r.nombre, r.sub + (a ? ` · te ha servido ${a.si} de ${a.n}` : ''), `data-a="rec" data-v="${id}"`)}</div>`; }).join('')}
-    ${o.cat === 'pensamiento' ? `<div data-e>${L.li(L.pt(c.c, 38), 'Las trampas del pensamiento', 'Conocerlas para verlas', 'data-a="trampas"')}</div>` : ''}
+    ${o.cat === 'pensamiento' ? `<div data-e>${L.li(L.pt(c.c, 38), 'Las trampas del pensamiento', 'Conocerlas para verlas', 'data-a="trampas"')}</div><div data-e>${L.li(L.pt(c.c, 38), 'Tus otras formas de verlo', 'Cómo miraste otras veces lo que te decías', 'data-a="otras"')}</div>` : ''}
   </div></div>`;
   L.entrar(el, 180, 55);
-  capa.acc = { rec: t => L.abrirRecurso(t.dataset.v), trampas: () => L.abrir('trampas') };
+  capa.acc = { rec: t => L.abrirRecurso(t.dataset.v), trampas: () => L.abrir('trampas'), otras: () => L.abrir('otrasFormas') };
 };
 L.abrirRecurso = (id, op = {}) => {
   const R = L.RECURSOS[id]; if (!R) return;
@@ -41,6 +41,7 @@ L.abrirRecurso = (id, op = {}) => {
   if (R.tipo === 'hecho') return L.abrir('hecho', o, 'sube');
   if (R.tipo === 'hablar') return L.abrir('hablar', o, 'lado');
   if (R.tipo === 'frases') return L.abrir('frases', o, 'lado');
+  if (R.tipo === 'vaciar') return L.abrir('vaciar', {}, 'sube');
 };
 
 /* ============================== RESPIRAR ============================== */
@@ -136,8 +137,10 @@ L.pantallas.pensamiento = (el, o, capa) => {
       const z = $('#lm-trx', el), ult = sel[sel.length - 1];
       if (!ult) { const c = $('.lm-card', z); if (c) L.anim(c, [{ opacity: 1 }, { opacity: 0, scale: .94 }], { duration: 220, easing: L.S }).then(() => z.innerHTML = ''); return; }
       const def = L.TRAMPAS.find(x => x[0] === ult)[1];
-      z.innerHTML = `<div class="lm-card" style="margin-top:12px"><b>${ult}</b><small>${def}</small></div>`;
-      L.anim($('.lm-card', z), [{ opacity: 0, translate: '0 12px' }, { opacity: 1, translate: '0 0' }], { duration: 460, easing: L.E });
+      const otra = L.otrasFormas(ult)[0];
+      z.innerHTML = `<div class="lm-card" style="margin-top:12px"><b>${ult}</b><small>${def}</small></div>${otra ? `<div class="lm-card" style="margin-top:8px"><b>La otra vez que viste esta trampa</b><small>Lo miraste así:</small><p style="font-family:Gloock;font-size:19px;line-height:1.25;margin-top:6px">${L.esc(otra.nota.otra)}</p><small style="margin-top:6px">${L.cuando(new Date(otra.ts))}</small></div>` : ''}`;
+      $$('.lm-card', z).forEach((c, k) => L.anim(c, [{ opacity: 0, translate: '0 12px' }, { opacity: 1, translate: '0 0' }], { duration: 460, delay: k * 60, easing: L.E }));
+      if (false) L.anim($('.lm-card', z), [{ opacity: 0, translate: '0 12px' }, { opacity: 1, translate: '0 0' }], { duration: 460, easing: L.E });
     },
     ok: () => { o.nota = { dice: $('#lm-dice', el).value.trim(), trampas: sel, otra: $('#lm-otra', el).value.trim() }; document.activeElement?.blur(); L.abrir('ayudo', o, 'fundido'); }
   };

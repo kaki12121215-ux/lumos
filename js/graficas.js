@@ -1,4 +1,4 @@
-/* Lumos 1.0.0 · gráfica del ánimo y cálculos */
+/* Lumos 1.1.0 · gráfica del ánimo y cálculos */
 'use strict';
 L.spline = pts => {
   if (pts.length < 2) return '';
@@ -13,7 +13,7 @@ L.spline = pts => {
 L.nivelRed = v => Math.max(-2, Math.min(2, Math.round(v)));
 
 /* vals: niveles (o null). Devuelve el SVG y las x de cada punto */
-L.grafica = ({ vals, sueno, med, etiquetas, W = 346, HP = 260, r = 5, gid = 'g', sel = null }) => {
+L.grafica = ({ vals, sueno, med, etiquetas, W = 346, HP = 260, r = 5, gid = 'g', sel = null, hitos = null }) => {
   const G = 84, pw = W - G - 12, bh = HP / 5, n = vals.length, y = v => (2 - v) * bh + bh / 2;
   const xs = vals.map((_, i) => G + (n > 1 ? pw * i / (n - 1) : pw / 2));
   const C = L.C, osc = L.oscuro();
@@ -32,6 +32,7 @@ L.grafica = ({ vals, sueno, med, etiquetas, W = 346, HP = 260, r = 5, gid = 'g',
   o.push('</g><g class="lm-g-linea">');
   tramos.forEach(pts => { if (pts.length > 1) o.push(`<path d="${L.spline(pts)}" pathLength="1" fill="none" stroke="url(#${gid})" stroke-width="${r > 6 ? 3.2 : 2.6}" stroke-linecap="round"/>`); });
   o.push('</g>');
+  if (hitos) hitos.forEach(h => { const c = h.tipo === 'medicacion' ? L.C.lil : h.tipo === 'vida' ? L.C.ale : L.C.cal; o.push(`<g class="lm-g-hito"><line x1="${xs[h.i].toFixed(1)}" x2="${xs[h.i].toFixed(1)}" y1="8" y2="${HP - 2}" stroke="${c}" stroke-width="1.6" stroke-dasharray="3 3"/><circle cx="${xs[h.i].toFixed(1)}" cy="6" r="4.2" fill="${c}"/></g>`); });
   o.push(`<line class="lm-g-sel" x1="0" x2="0" y1="4" y2="${HP + (sueno ? 60 : 0) + (med ? 20 : 0)}" stroke="currentColor" stroke-opacity=".3" stroke-dasharray="2 4" style="opacity:0"/>`);
   o.push('<g class="lm-g-puntos">');
   vals.forEach((v, i) => {

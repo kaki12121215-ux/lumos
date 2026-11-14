@@ -1,10 +1,13 @@
-/* Lumos 1.0.0 · escala del ánimo */
+/* Lumos 1.1.0 · escala del ánimo */
 'use strict';
 L.estAnimo = { rango: 'Semana', off: 0 };
 const signo = n => L.NIV[n].signo;
 
 L.vistas.animo = (el, { primera }) => {
-  const E = L.estAnimo, hoy = L.hoy(), an = L.mapaAnimo()[hoy], sen = L.senales();
+  const E = L.estAnimo, hoy = L.hoy(), an = L.mapaAnimo()[hoy], A = L.aprender(), act = L.faseActual();
+  const sen = act && act.dias.length >= 3 ? [{ titulo: `Estás en una ${L.nombreFase(act.tipo)} desde el ${L.fechaCorta(L.deIso(act.inicio))}`, texto: act.tipo === 'abajo' ? 'Un día mejor entre medias no la cierra: la doy por terminada tras tres días estables seguidos.' : 'Puede ser buen momento para bajar el ritmo y cuidar el sueño.' }]
+    : [...L.indicios(A).map(i => ({ titulo: L.tituloIndicio(i.tipo), texto: i.texto })), ...L.senales().filter(s => s.tipo === 'med')];
+  const cs = L.cruceSueno(), nA = A.n.arriba, nB = A.n.abajo;
   const datos = L.datosPeriodo(E.rango, E.off), rep = L.reparto(datos.vals);
   const ley = [[rep.estable, `${rep.estable} ${rep.estable === 1 ? 'día' : 'días'} estable`, L.NIV[0].c], [rep.arriba, `${rep.arriba} por arriba`, L.NIV[1].c], [rep.abajo, `${rep.abajo} por abajo`, L.NIV[-1].c]].filter(x => x[0]);
   el.innerHTML = `<div class="lm-pad">
@@ -20,14 +23,20 @@ L.vistas.animo = (el, { primera }) => {
     <div data-e>${rep.total ? `<div class="lm-repb">${rep.por.filter(([, k]) => k).map(([n, k]) => `<i style="flex:${k};background:${L.NIV[n].c}"></i>`).join('')}</div>
       <div class="lm-ley">${ley.map(([, t, c]) => `<span>${L.pt(c, 16)}${t}</span>`).join('')}</div>`
       : '<p class="lm-nota-p">En este periodo no hay días apuntados. Los huecos también cuentan: no pasa nada.</p>'}</div>
-    <div data-e style="margin-top:20px">${L.li(`<span style="color:var(--mu)">${L.ic('info')}</span>`, 'Qué significa cada nivel', 'Manía, hipomanía, estable, hipotimia y depresión', 'data-a="sig"')}</div>
+    ${cs && (cs.poco >= 3 || cs.mucho >= 3) ? `<h3 class="lm-sec" data-e>Sueño y ánimo</h3><div class="lm-card" data-e>${cs.poco >= 3 && cs.arribaPoco != null ? `<p style="font-size:15px;line-height:1.45">Los días que duermes <strong>menos de 6 horas</strong>, estás por arriba el <strong class="lm-num">${cs.arribaPoco} %</strong> de las veces. Con un sueño normal, el ${cs.arribaResto} %.</p>` : ''}
+      ${cs.mucho >= 3 && cs.abajoMucho != null ? `<p style="font-size:15px;line-height:1.45;margin-top:8px">Los días que duermes <strong>más de 9 horas</strong>, estás por abajo el <strong class="lm-num">${cs.abajoMucho} %</strong> de las veces. Con un sueño normal, el ${cs.abajoResto} %.</p>` : ''}
+      <small style="margin-top:8px">Es lo que suele ir junto en tus datos, no causa y efecto.</small></div>` : ''}
+    <div data-e style="margin-top:20px">${L.li(L.pt(L.C.ene, 36), 'Tus señales tempranas', nA + nB ? `Aprendidas de ${nA} ${nA === 1 ? 'subida' : 'subidas'} y ${nB} ${nB === 1 ? 'bajada' : 'bajadas'}` : 'Lo que suele pasar antes de una subida o una bajada', 'data-a="senales"')}</div>
+    <div data-e>${L.li(L.pt(L.C.lil, 36), 'Lo que he aprendido', 'Cada fase, cómo empezó y qué te ayudó', 'data-a="aprendido"')}</div>
+    <div data-e>${L.li(`<span style="color:var(--mu)">${L.ic('calendario')}</span>`, 'Hitos', 'Cambios de medicación, viajes… en la gráfica', 'data-a="hitos"')}</div>
+    <div data-e>${L.li(`<span style="color:var(--mu)">${L.ic('info')}</span>`, 'Qué significa cada nivel', 'Manía, hipomanía, estable, hipotimia y depresión', 'data-a="sig"')}</div>
     <p class="lm-nota-p" data-e style="margin-top:6px">${L.AVISO_ESCALA}</p>
   </div>`;
   L.mancha($('[data-seg]', el), true);
   pintarGrafica(el, datos, primera);
   return {
     apuntar: () => L.abrir('nivel', { flujo: 'escala' }, 'sube'),
-    plan: () => L.abrir('plan'), sig: () => L.abrir('significado'),
+    plan: () => L.abrir('plan'), sig: () => L.abrir('significado'), senales: () => L.abrir('senalesTempranas'), aprendido: () => L.abrir('aprendido'), hitos: () => L.abrir('hitos'),
     rango: t => { if (E.rango === t.dataset.v) return; E.rango = t.dataset.v; E.off = 0; L.elegirSeg(t); cambiar(el, 0); },
     per: t => { E.off += +t.dataset.v; cambiar(el, +t.dataset.v); }
   };
@@ -54,7 +63,9 @@ async function cambiar(el, dir) {
 function pintarGrafica(el, datos, animar) {
   const g = $('#lm-graf', el), E = L.estAnimo;
   const W = 346, HP = E.rango === 'Semana' ? 250 : 220;
-  const G = L.grafica({ vals: datos.vals, sueno: datos.sueno, med: datos.med, etiquetas: datos.et, W, HP, r: datos.r, gid: 'gan' });
+  const hitosI = [];
+  L.d.hitos.forEach(h => { const i = datos.semanal ? datos.dias.findIndex(d => h.fecha >= L.iso(d) && h.fecha < L.iso(L.mas(d, 7))) : datos.dias.findIndex(d => L.iso(d) === h.fecha); if (i >= 0) hitosI.push({ i, tipo: h.tipo, texto: h.texto }); });
+  const G = L.grafica({ vals: datos.vals, sueno: datos.sueno, med: datos.med, etiquetas: datos.et, W, HP, r: datos.r, gid: 'gan', hitos: hitosI });
   g.innerHTML = G.svg;
   const svg = $('svg', g);
   if (animar) L.animarGrafica(svg);
@@ -79,12 +90,14 @@ function pintarGrafica(el, datos, animar) {
       tit = L.fechaLarga(d);
       const fut = d > new Date();
       txt = v == null ? (fut ? 'Todavía no ha llegado' : 'Sin apuntar. Los huecos también cuentan.') : `${L.NIV[v].nombre}${s != null ? `, ${L.num(s)} horas de sueño` : ''}, ${m ? 'medicación tomada' : 'medicación sin tomar'}`;
-      if (!fut) accion = `<button class="lm-pill lm-claro tq" data-a="dia" data-f="${L.iso(d)}" style="align-self:flex-start;margin-top:8px">${v == null ? 'Apuntar este día' : 'Editar este día'}</button>`;
+      if (!fut) accion = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="lm-pill lm-claro tq" data-a="dia" data-f="${L.iso(d)}" style="margin:0">${v == null ? 'Apuntar este día' : 'Editar este día'}</button><button class="lm-pill lm-claro tq" data-a="hito" data-f="${L.iso(d)}" style="margin:0">Añadir un hito</button></div>`;
     }
     const z = $('#lm-tipz', el), viejo = $('.lm-tip', z);
-    z.innerHTML = `<div class="lm-tip"><b>${tit}</b><span>${txt}</span>${accion}</div>`;
+    const hs = hitosI.filter(h => h.i === i);
+    z.innerHTML = `<div class="lm-tip"><b>${tit}</b><span>${txt}</span>${hs.map(h => `<span style="opacity:.8">Hito: ${L.esc(h.texto)}</span>`).join('')}${accion}</div>`;
     if (!viejo) L.anim($('.lm-tip', z), [{ opacity: 0, translate: '0 8px' }, { opacity: 1, translate: '0 0' }], { duration: 320, easing: L.E });
     const b = $('[data-a="dia"]', z); if (b) b.onclick = () => L.abrir('nivel', { flujo: 'escala', fecha: b.dataset.f }, 'sube');
+    const bh = $('[data-a="hito"]', z); if (bh) bh.onclick = () => L.hojaHito(bh.dataset.f);
   };
   let activo = false;
   svg.addEventListener('pointerdown', e => { activo = true; elegir(e.clientX); });
@@ -120,13 +133,14 @@ L.pantallas.nivel = (el, o, capa) => {
 /* ============================== COMPLETAR EL DÍA ============================== */
 L.pantallas.completar = (el, o, capa) => {
   const prev = L.mapaAnimo()[o.fecha], ult = [...L.d.animo].sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
-  let sueno = prev?.sueno ?? ult?.sueno ?? 7.5, med = prev ? prev.medicacion : true, mixto = prev?.mixto || false, sint = [...(prev?.sintomas || [])];
+  const deSalud = prev?.sueno == null && L.d.salud?.[o.fecha]?.sueno != null;
+  let sueno = prev?.sueno ?? L.d.salud?.[o.fecha]?.sueno ?? ult?.sueno ?? 7.5, med = prev ? prev.medicacion : true, mixto = prev?.mixto || false, sint = [...(prev?.sintomas || [])];
   el.innerHTML = `${L.top('atras', L.NIV[o.nivel].nombre, ['cerrar', 'x', 'Cerrar'])}<div class="lm-scroll"><div class="lm-pad lm-contop">
     <h1 class="lm-t1" data-e>Completa el día</h1>
-    <div class="lm-card lm-fila" data-e style="margin-top:12px"><span style="color:var(--mu)">${L.ic('cama')}</span><div><b>Horas de sueño</b><small>La noche de antes</small></div><div class="lm-step"><button class="tq tq-i" data-a="s" data-v="-.5" aria-label="Menos">${L.ic('menos', 16)}</button><b class="lm-num" id="lm-su">${L.num(sueno)}</b><button class="tq tq-i" data-a="s" data-v=".5" aria-label="Más">${L.ic('mas', 16)}</button></div></div>
+    <div class="lm-card lm-fila" data-e style="margin-top:12px"><span style="color:var(--mu)">${L.ic('cama')}</span><div><b>Horas de sueño</b><small>${deSalud ? 'Desde Salud. Puedes cambiarlo' : 'La noche de antes'}</small></div><div class="lm-step"><button class="tq tq-i" data-a="s" data-v="-.5" aria-label="Menos">${L.ic('menos', 16)}</button><b class="lm-num" id="lm-su">${L.num(sueno)}</b><button class="tq tq-i" data-a="s" data-v=".5" aria-label="Más">${L.ic('mas', 16)}</button></div></div>
     <div class="lm-card lm-fila" data-e style="margin-top:10px"><span style="color:var(--mu)">${L.ic('pastilla')}</span><div><b>Medicación tomada</b><small>Como te la han pautado</small></div>${L.sw(med, 'data-a="med"')}</div>
     <div class="lm-card lm-fila" data-e style="margin-top:10px"><span style="color:var(--mu)">${L.ic('animo')}</span><div><b>Día mixto</b><small>Acelerado y hundido el mismo día</small></div>${L.sw(mixto, 'data-a="mix"')}</div>
-    <h3 class="lm-sec" data-e>¿Algo de esto ${o.fecha === L.hoy() ? 'hoy' : 'ese día'}?</h3><div data-e>${L.chips(L.SINTOMAS, sint, 'si')}</div>
+    <h3 class="lm-sec" data-e>¿Algo de esto ${o.fecha === L.hoy() ? 'hoy' : 'ese día'}?</h3><div data-e id="lm-sintz">${L.chips([...L.SINTOMAS, ...L.d.sintomasPropios], sint, 'si')}</div><button class="lm-enlace tq" data-a="nuevoSint" data-e style="text-align:left;margin:4px 0 0;padding-left:2px">Añadir un síntoma tuyo</button>
     <h3 class="lm-sec" data-e>Nota para tu profesional</h3><textarea class="lm-nota" data-e id="lm-np" rows="3" placeholder="Lo que quieras contar en la consulta">${L.esc(prev?.nota || '')}</textarea>
   </div></div><div class="lm-abajo"><button class="lm-btn tq tq-g" data-a="ok">Guardar el día</button></div>`;
   L.entrar(el, 300, 55);
@@ -134,6 +148,7 @@ L.pantallas.completar = (el, o, capa) => {
     s: t => { const n = Math.max(0, Math.min(16, sueno + +t.dataset.v)); if (n === sueno) return; const sube = n > sueno; sueno = n; L.rodar($('#lm-su', el), L.num(sueno), sube); },
     med: t => { med = !med; t.classList.toggle('lm-on', med); },
     mix: t => { mixto = !mixto; t.classList.toggle('lm-on', mixto); },
+    nuevoSint: () => L.hojaSintoma(v => { if (!sint.includes(v)) sint.push(v); const z = $('#lm-sintz', el); z.innerHTML = L.chips([...L.SINTOMAS, ...L.d.sintomasPropios], sint, 'si'); const c = $(`[data-v="${CSS.escape(v)}"]`, z); if (c) L.anim(c, [{ opacity: 0, scale: .86 }, { opacity: 1, scale: 1 }], { duration: 480, easing: L.M }); }),
     si: t => { const v = t.dataset.v; sint = sint.includes(v) ? sint.filter(x => x !== v) : [...sint, v]; t.classList.toggle('lm-si'); },
     ok: async () => {
       L.d.animo = L.d.animo.filter(a => a.fecha !== o.fecha);

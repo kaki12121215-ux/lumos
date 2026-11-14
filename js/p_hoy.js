@@ -1,13 +1,54 @@
-/* Lumos 1.0.0 · Hoy, apuntar una emoción, mañana, noche y momentos */
+/* Lumos 1.1.0 · Hoy, apuntar una emoción, mañana, noche y momentos */
 'use strict';
 const nombreInf = e => (e.influencias || []).length ? ', por ' + e.influencias.map(x => L.minus(x)).join(' y ') : '';
 
+/* ============================== TARJETAS «PARA TI» ============================== */
+const tarjeta = (titulo, texto, botones, extra = '') => `<div class="lm-card" data-e style="margin-top:10px">${extra}<b>${titulo}</b><small>${texto}</small><div class="lm-chips" style="margin-top:4px">${botones.map(([t, a, v], i) => `<button class="lm-pill ${i ? 'lm-claro' : ''} tq" data-a="${a}" ${v != null ? `data-v="${L.esc(v)}"` : ''}>${t}</button>`).join('')}</div></div>`;
+L.tarjetasHoy = () => {
+  const T = [], p = L.d.perfil, hoy = L.hoy(), m = L.mapaAnimo();
+  if (p.escala !== false) {
+    const act = L.faseActual();
+    if (act && act.dias.length >= 3) {
+      T.push(tarjeta(`Estás en una ${L.nombreFase(act.tipo)} desde el ${L.DIAS[L.deIso(act.inicio).getDay()]} ${L.deIso(act.inicio).getDate()}`,
+        act.tipo === 'abajo' ? 'Un día mejor entre medias también cuenta, pero aún no la doy por terminada. Ve despacio y mira tu plan.' : 'Puede ser buen momento para bajar el ritmo, cuidar el sueño y mirar tu plan.',
+        [['Ver mi plan', 'plan'], ['Modo cuidado', 'cuidado']]));
+    } else if (L.d.plan.avisar) {
+      L.indicios().forEach(i => T.push(tarjeta(L.tituloIndicio(i.tipo), i.texto + ' No es un diagnóstico: míralo con calma.', [['Ver mi plan', 'plan'], ['Mis señales', 'senales']])));
+    }
+    if (!T.length && L.d.plan.avisar) L.senales().filter(s => s.tipo === 'med').forEach(s => T.push(tarjeta(s.titulo, s.texto, [['Ver mi plan', 'plan']])));
+  }
+  const ult = Object.keys(m).sort().slice(-2).map(f => m[f]);
+  if (L.d.carta && L.d.cartaVista !== hoy && ult.length === 2 && ult.every(a => a.nivel <= -1)) T.push(tarjeta('Una carta tuya, de un día tranquilo', 'La escribiste para días como estos. Léela cuando quieras.', [['Leerla', 'carta']]));
+  if (p.escala !== false && L.enBajada()) { const h = L.d.hechos.find(x => x.fecha === hoy), n = h ? h.cosas.length : 0; T.push(tarjeta('Lo que sí has hecho hoy', n ? `Llevas ${n === 1 ? 'una cosa apuntada' : L.enLetra(n) + ' cosas apuntadas'}. Lo pequeño también cuenta.` : 'En los días difíciles, lo pequeño también cuenta. Levantarte ya es algo.', [[n ? 'Añadir más' : 'Apuntarlo', 'hechos']])); }
+  const caja = L.cajaPendiente(); if (caja) { const n = caja.items.filter(i => !i.estado).length; T.push(tarjeta(`Anoche dejaste ${n === 1 ? 'una cosa' : L.enLetra(n) + ' cosas'} en la caja`, 'Míralas con la cabeza de hoy: ¿siguen importando?', [['Mirarlas', 'caja', caja.id]])); }
+  const fm = p.escala !== false && L.faseParaMirar(); if (fm) T.push(tarjeta(`Tu ${L.mesFase(fm)} ya pasó`, 'Si quieres, miramos qué notaste primero y qué te ayudó. Sirve para la próxima vez.', [['Mirar atrás', 'mirar', fm.id], ['Ahora no', 'nomirar', fm.id]]));
+  const dS = new Date().getDay(); if ((dS === 0 || dS === 1) && L.datosSemana(dS === 1 ? -1 : 0).buenas.length + L.datosSemana(dS === 1 ? -1 : 0).momentos.length > 0) T.push(tarjeta('Lo bueno de la semana', 'Lo que apuntaste como bueno estos siete días, junto.', [['Verlo', 'semana', dS === 1 ? -1 : 0]]));
+  const ma = L.mesAnterior(); if (new Date().getDate() <= 6 && L.d.historiaVista !== ma && L.datosMes(ma).total > 0) T.push(tarjeta(`Tu ${L.datosMes(ma).nombre} en una historia`, 'Tus palabras, tu ánimo y tus momentos del mes, en unas pantallas.', [['Verla', 'historia', ma]]));
+  return T.slice(0, 3);
+};
+
 /* ============================== HOY ============================== */
+const accHoy = () => ({
+  ajustes: () => L.abrir('ajustes'), apuntar: () => L.abrir('apuntar', { flujo: 'emo' }, 'sube'),
+  escala: () => L.abrir('nivel', { flujo: 'escala' }, 'sube'), momentos: () => L.abrir('momentos'),
+  plan: () => L.abrir('plan'), entrada: t => L.abrir('entrada', { id: t.dataset.id }),
+  manana: () => L.abrir('manana', {}, 'sube'), noche: () => L.abrir('noche', {}, 'sube'),
+  diario: () => L.abrir('diario'), ayuda: () => L.abrir('ayuda'), senales: () => L.abrir('senalesTempranas'),
+  cuidado: () => { L.d.perfil.cuidado = true; L.guardar(); L.pintarVista(true); L.toast('Modo cuidado activado'); },
+  salircuidado: () => { L.d.perfil.cuidado = false; L.guardar(); L.pintarVista(true); },
+  carta: () => L.abrir('cartaLeer', {}, 'sube'), hechos: () => L.abrir('hechos', {}, 'sube'),
+  caja: t => L.abrir('caja', { id: t.dataset.v }, 'sube'), mirar: t => L.abrir('mirarAtras', { id: t.dataset.v, flujo: 'mirar' }, 'sube'),
+  nomirar: t => { L.d.reflexionesOmitidas.push(t.dataset.v); L.guardar(); const c = t.closest('.lm-card'); L.anim(c, [{ opacity: 1, scale: 1 }, { opacity: 0, scale: .94 }], { duration: 220, easing: L.S }).then(() => L.refrescarRaiz()); },
+  semana: t => L.abrir('semana', { off: +t.dataset.v }), historia: t => L.abrir('historia', { mes: t.dataset.v }, 'fundido'),
+  momdia: t => L.abrir('momento', { id: t.dataset.id }), resp: () => L.abrirRecurso('respirar-despacio'),
+  plancheck: t => { const k = +t.dataset.k, f = L.hoy(), l = L.d.planHecho[f] = L.d.planHecho[f] || []; const i = l.indexOf(k), on = i < 0; on ? l.push(k) : l.splice(i, 1); L.guardar(); L.marcarCheck(t, on); }
+});
 L.vistas.hoy = el => {
   const p = L.d.perfil, hoy = L.hoy(), es = L.emocionesDe(hoy).reverse();
+  if (p.cuidado) return vistaCuidado(el);
   const an = L.mapaAnimo()[hoy], nMom = L.d.momentos.length, fr = L.franja();
   const man = L.d.mananas.find(m => m.fecha === hoy), noc = L.d.noches.find(n => n.fecha === hoy);
-  const sen = p.escala !== false && L.d.plan.avisar ? L.senales() : [];
+  const tarjetas = L.tarjetasHoy(), md = L.momentoDelDia();
   const cols = es.length ? [...new Set(es.map(e => L.colorDe(e.palabra)))].slice(0, 4) : [L.C.ten, L.C.ene, L.C.ver, L.C.ale];
   while (cols.length < 4) cols.push([L.C.ale, L.C.cal, L.C.ene, L.C.baj][cols.length]);
   const vis = [[-30, -10, 210], [110, 10, 200], [210, -30, 190], [60, 50, 170]].map(([x, y, d], i) => L.orb(cols[i], d, `left:${x}px;top:${y}px`)).join('');
@@ -24,24 +65,39 @@ L.vistas.hoy = el => {
       ${p.escala !== false ? `<button class="lm-card tq tq-g" data-a="escala" style="text-align:left">${an ? L.pt(L.NIV[an.nivel].c, 32) : L.pt(L.C.ene, 32)}<div><b>Tu escala</b><small>${an ? 'Hoy, ' + L.NIV[an.nivel].nombre.toLowerCase() : 'Hoy sin apuntar'}</small></div></button>` : `<button class="lm-card tq tq-g" data-a="diario" style="text-align:left"><span style="color:var(--mu)">${L.ic('libro')}</span><div><b>Diario</b><small>Todo lo apuntado</small></div></button>`}
       <button class="lm-card tq tq-g" data-a="momentos" style="text-align:left"><span style="color:var(--mu)">${L.ic('tarro')}</span><div><b>Momentos</b><small>${nMom ? (nMom === 1 ? 'Uno guardado' : nMom + ' guardados') : 'Guarda lo bueno'}</small></div></button>
     </div>
-    ${sen.length ? `<div class="lm-card" data-e style="margin-top:12px"><b>${sen[0].titulo}</b><small>${sen[0].texto}</small><button class="lm-pill tq" data-a="plan">Ver mi plan</button></div>` : ''}
+    ${tarjetas.length ? `<h3 class="lm-sec" data-e>Para ti, hoy</h3>${tarjetas.join('')}` : ''}
     <h3 class="lm-sec" data-e>Hoy</h3>
     <div data-e>${es.length ? es.map(e => `<button class="lm-ent tq tq-g" data-a="entrada" data-id="${e.id}" style="width:100%;text-align:left">${L.pt(L.colorDe(e.palabra), 38)}<div><p>${L.esc(e.palabra)}</p><small>A las ${L.hora(e.ts)}${nombreInf(e)}${e.tipo === 'dia' ? ' · el día' : ''}</small></div></button>`).join('') :
       `<p class="lm-vacia">Aún no has apuntado nada hoy. Cuando quieras, toca el botón de arriba: son veinte segundos.</p>`}</div>
     <div data-e style="margin-top:14px">${dia}</div>
+    ${md ? `<h3 class="lm-sec" data-e>Un momento que vuelve</h3><button class="lm-mom lm-dia tq tq-g" data-a="momdia" data-id="${md.id}" data-e style="width:100%;text-align:left"><div class="lm-vis">${L.orb(md.palabra ? L.colorDe(md.palabra) : L.C.ale, 170, 'right:-60px;top:-60px')}</div><div><b>${L.esc(md.texto)}</b><small>${L.cuando(new Date(md.ts))}</small></div></button>` : ''}
     <div class="lm-ayudas" data-e>
       <button class="lm-card tq tq-g" data-a="diario"><span style="color:var(--mu)">${L.ic('libro', 20)}</span>Diario</button>
       <button class="lm-card tq tq-g" data-a="ayuda"><span style="color:var(--mu)">${L.ic('mano', 20)}</span>Si estás mal</button>
     </div>
   </div>`;
-  return {
-    ajustes: () => L.abrir('ajustes'), apuntar: () => L.abrir('apuntar', { flujo: 'emo' }, 'sube'),
-    escala: () => L.abrir('nivel', { flujo: 'escala' }, 'sube'), momentos: () => L.abrir('momentos'),
-    plan: () => L.abrir('plan'), entrada: t => L.abrir('entrada', { id: t.dataset.id }),
-    manana: () => L.abrir('manana', {}, 'sube'), noche: () => L.abrir('noche', {}, 'sube'),
-    diario: () => L.abrir('diario'), ayuda: () => L.abrir('ayuda')
-  };
+  return accHoy();
 };
+/* Modo cuidado: solo lo importante */
+function vistaCuidado(el) {
+  const p = L.d.perfil, hechoHoy = L.d.planHecho[L.hoy()] || [], ps = L.ordenPersonas();
+  el.innerHTML = `<div class="lm-pad lm-cuidado">
+    <div class="lm-priv" data-e>${L.ic('candado', 15)}<span>Solo lo ves tú</span><button class="lm-rb tq tq-i" data-a="ajustes" aria-label="Ajustes">${L.ic('ajustes', 19)}</button></div>
+    <h1 class="lm-t1" data-e>Modo cuidado</h1><p class="lm-sub" data-e style="margin-bottom:16px">Solo lo importante, para estos días, ${L.esc(p.nombre)}. Ve despacio.</p>
+    <h3 class="lm-sec" data-e style="margin-top:0">Mi plan para hoy</h3>
+    <div data-e>${L.d.plan.hago.length ? L.d.plan.hago.map((x, k) => `<button class="lm-hecho tq tq-g ${hechoHoy.includes(k) ? 'lm-hecha' : ''}" data-a="plancheck" data-k="${k}" style="width:100%;text-align:left">${L.checkSvg(hechoHoy.includes(k))}<span>${L.esc(x)}</span></button>`).join('')
+      : `<div class="lm-card"><b>Aún no has escrito tu plan</b><small>Cuando estés más tranquilo, apunta lo que te ayuda en días así.</small><button class="lm-pill tq" data-a="plan">Escribirlo</button></div>`}</div>
+    <div data-e style="margin-top:16px">
+      <button class="lm-btn tq tq-g" data-a="apuntar">Apuntar cómo estoy</button>
+      <button class="lm-btn lm-sec2 tq tq-g" data-a="resp">Respirar despacio un minuto</button>
+      <button class="lm-btn lm-sec2 tq tq-g" data-a="hechos">Lo que sí he hecho hoy</button>
+    </div>
+    ${ps.length ? `<h3 class="lm-sec" data-e>Tus personas</h3>${ps.map(x => `<div data-e>${L.li(`<span class="lm-av">${L.esc(x.nombre[0])}</span>`, L.esc(x.nombre), x.tel ? 'Llamar o escribir' : '', `data-a="ayuda"`)}</div>`).join('')}` : ''}
+    <a class="lm-card lm-fuerte tq tq-g" data-e href="tel:024" style="margin-top:12px">${L.ic('telefono', 26)}<div><b>Llamar al 024</b><small>Gratis y a cualquier hora.</small></div></a>
+    <button class="lm-enlace tq" data-a="salircuidado" data-e style="margin-top:14px">Salir del modo cuidado</button>
+  </div>`;
+  return accHoy();
+}
 
 /* ============================== APUNTAR: AHORA O EL DÍA ============================== */
 L.pantallas.apuntar = (el, o, capa) => {
@@ -221,21 +277,29 @@ L.hojaPalabra = (inicial, alFin) => {
 
 /* ============================== REGISTRO: DETALLE DE LA PALABRA ============================== */
 L.pantallas.registro = (el, o, capa) => {
-  const p = L.palabra(o.palabra); let inf = [];
+  const p = L.palabra(o.palabra); let inf = [], intensidad = 2, cuerpo = [];
   el.innerHTML = `<div class="lm-hero" style="height:330px">${L.orb(p.color, 270, `left:50%;margin-left:-135px;top:calc(var(--st) + 26px);${o.heroOculto ? 'visibility:hidden' : ''}`, 'lm-reg-hero')}</div>
     ${L.top('atras', '', ['cerrar', 'x', 'Cerrar'])}
     <div class="lm-scroll"><div class="lm-pad" style="padding-top:calc(var(--st) + 262px)">
       <p class="lm-ms" data-e>${o.tipo === 'dia' ? 'Hoy me he sentido' : 'Me siento'}</p>
       <h1 class="lm-t1 lm-grande" data-e style="color:${L.textoDe(p.color)};font-size:${L.tamGrande(p.palabra)}px">${L.esc(L.minus(p.palabra))}</h1>
       <p class="lm-sub" data-e>${L.esc(p.def)}</p>
+      <h3 class="lm-sec" data-e>¿Cuánto?</h3><div data-e>${L.segmentado(['Un poco', 'Bastante', 'Mucho'], 'Bastante', 'int')}</div>
       <h3 class="lm-sec" data-e>¿Qué tiene que ver?</h3><div data-e>${L.chips(L.INFLUENCIAS, [], 'inf')}</div>
+      <div data-e style="margin-top:14px" id="lm-cz">${L.li(`<span style="color:var(--mu)">${L.ic('persona')}</span>`, '¿Dónde lo notas?', 'En el cuerpo. Es opcional', 'data-a="cuerpo"')}</div>
       <h3 class="lm-sec" data-e>¿Quieres apuntar algo?</h3><textarea class="lm-nota" data-e id="lm-nota" placeholder="Lo que quieras, o nada" rows="3"></textarea>
     </div></div><div class="lm-abajo"><button class="lm-btn tq tq-g" data-a="guardar">Guardar</button></div>`;
   L.entrar(el, o.heroOculto ? 330 : 200, 45);
+  L.mancha($('[data-seg]', el), true);
   capa.acc = {
+    int: t => {
+      L.elegirSeg(t); intensidad = ['Un poco', 'Bastante', 'Mucho'].indexOf(t.dataset.v) + 1;
+      const h = $('.lm-reg-hero', el); h.style.transition = 'scale .6s cubic-bezier(.3,1.2,.4,1)'; h.style.scale = [.8, 1, 1.16][intensidad - 1];
+    },
+    cuerpo: () => L.hojaCuerpo(cuerpo, p.color, sel => { cuerpo = sel; L.rodar($('#lm-cz small', el), sel.length ? L.unir(sel) : 'En el cuerpo. Es opcional', true); }),
     inf: t => { const v = t.dataset.v; inf = inf.includes(v) ? inf.filter(x => x !== v) : [...inf, v]; t.classList.toggle('lm-si'); },
     guardar: async () => {
-      const e = { id: L.id(), ts: Date.now(), palabra: p.palabra, tipo: o.tipo || 'ahora', influencias: inf, nota: $('#lm-nota', el).value.trim() };
+      const e = { id: L.id(), ts: Date.now(), palabra: p.palabra, tipo: o.tipo || 'ahora', influencias: inf, nota: $('#lm-nota', el).value.trim(), intensidad, cuerpo };
       L.d.emociones.push(e); L.guardar(); L.refrescarRaiz();
       L.abrir(p.agradable ? 'saborear' : 'guardado', { flujo: 'emo', entrada: e }, 'fundido');
     }
@@ -249,15 +313,16 @@ L.sugerir = palabra => {
   return [...new Set([...ayudan.slice(0, 1), ...base])].slice(0, 3);
 };
 L.pantallas.guardado = (el, o, capa) => {
-  const e = o.entrada, p = L.palabra(e.palabra), sug = L.sugerir(e.palabra);
+  const e = o.entrada, p = L.palabra(e.palabra), sug = L.sugerir(e.palabra), op = L.momentoOportuno(e.palabra);
   el.innerHTML = `<div class="lm-hero" style="height:300px">${L.orb(p.color, 250, 'left:50%;margin-left:-125px;top:calc(var(--st) + 20px)')}</div>
     ${L.top(null, '', ['cerrar', 'x', 'Cerrar'])}<div class="lm-scroll"><div class="lm-pad" style="padding-top:calc(var(--st) + 244px)">
     <h1 class="lm-t1" data-e>Guardado</h1><p class="lm-sub" data-e style="font-size:16px;margin-bottom:16px">Sentirse ${L.esc(L.minus(p.palabra))} es una señal, no un fallo. ¿Te apetece probar algo ahora?</p>
+    ${op ? `<h3 class="lm-sec" data-e style="margin-top:4px">Esto te puede venir bien</h3><button class="lm-mom tq tq-g" data-a="mom" data-id="${op.momento.id}" data-e style="width:100%;text-align:left;min-height:120px"><div class="lm-vis">${L.orb(op.momento.palabra ? L.colorDe(op.momento.palabra) : L.C.ale, 170, 'right:-60px;bottom:-70px')}</div><b>${L.esc(op.momento.texto)}</b><small style="max-width:78%">${L.esc(op.porque)}</small></button><h3 class="lm-sec" data-e>O probar algo ahora</h3>` : ''}
     ${sug.map(id => { const r = L.RECURSOS[id], c = L.CATS.find(x => x.id === r.cat).c; return `<div data-e>${L.li(L.pt(c, 38), r.nombre, r.sub, `data-a="rec" data-v="${id}"`)}</div>`; }).join('')}
     <button class="lm-enlace tq" data-a="cerrar" data-e style="margin-top:6px">Ahora no, gracias</button></div></div>`;
   $('.lm-hero .lm-orb', el).animate([{ scale: .9 }, { scale: 1 }], { duration: 700, easing: L.E });
   L.entrar(el, 160);
-  capa.acc = { rec: async t => { const id = t.dataset.v; await L.cerrarFlujo('emo'); L.abrirRecurso(id, { antes: e }); } };
+  capa.acc = { rec: async t => { const id = t.dataset.v; await L.cerrarFlujo('emo'); L.abrirRecurso(id, { antes: e }); }, mom: t => L.abrir('momento', { id: t.dataset.id, oportuno: true }) };
 };
 /* ============================== SABOREAR LO AGRADABLE ============================== */
 L.pantallas.saborear = (el, o, capa) => {
@@ -283,7 +348,8 @@ L.pantallas.entrada = (el, o, capa) => {
       <div class="lm-scroll"><div class="lm-pad lm-sinbarra" style="padding-top:calc(var(--st) + 246px)">
         <p class="lm-ms" data-e>${L.cuando(d)} a las ${L.hora(e.ts)}${e.tipo === 'dia' ? ', el día' : ''}</p>
         <h1 class="lm-t1 lm-grande" data-e style="font-size:${L.tamGrande(p.palabra)}px">${L.esc(p.palabra)}</h1>
-        <p class="lm-sub" data-e>${L.esc(p.def)}</p>
+        <p class="lm-sub" data-e>${L.esc(p.def)}${e.intensidad ? ` <b style="color:var(--ink)">${['Un poco', 'Bastante', 'Mucho'][e.intensidad - 1]}.</b>` : ''}</p>
+        ${(e.cuerpo || []).length ? `<h3 class="lm-sec" data-e>Dónde lo notaste</h3><div data-e>${L.chips(e.cuerpo, [], 'x')}</div>` : ''}
         <h3 class="lm-sec" data-e>Qué tuvo que ver</h3>
         <div data-e>${editando ? L.chips(L.INFLUENCIAS, e.influencias || [], 'inf') : (e.influencias || []).length ? L.chips(e.influencias, e.influencias, 'x') : '<p class="lm-nota-p">No apuntaste nada.</p>'}</div>
         <h3 class="lm-sec" data-e>Lo que apuntaste</h3>
@@ -338,16 +404,23 @@ L.pantallas.noche = (el, o, capa) => {
     ${L.top(null, '', ['cerrar', 'x', 'Cerrar'])}<div class="lm-scroll"><div class="lm-pad" style="padding-top:calc(var(--st) + 200px)">
     <p class="lm-ms" data-e>Cerrar el día</p><h1 class="lm-t1" data-e>¿Qué te llevas de hoy?</h1>
     ${es.length ? `<div class="lm-card lm-fila" data-e style="margin-top:12px"><div><b>Tu día en ${es.length === 1 ? 'un momento' : L.enLetra(es.length) + ' momentos'}</b><small>${L.esc(frase)}</small></div><div style="display:flex">${es.slice(-5).map((e, i) => L.pt(L.colorDe(e.palabra), 44, i ? 'margin-left:-12px' : '')).join('')}</div></div>` : ''}
-    <h3 class="lm-sec" data-e>Algo que ha salido bien</h3><textarea class="lm-nota" data-e id="lm-bien" rows="3" placeholder="Aunque sea pequeño"></textarea>
+    <h3 class="lm-sec" data-e>Tres cosas buenas</h3><p class="lm-nota-p" data-e style="margin:-4px 0 10px">Pequeñas valen. Si hoy no sale ninguna, también vale.</p>
+    <div data-e>${[0, 1, 2].map(k => `<div class="lm-buena"><input class="lm-input" data-b="que" data-k="${k}" placeholder="${['Una cosa buena de hoy', 'Otra, si la hay', 'Y otra más'][k]}" maxlength="120" style="margin-bottom:6px">
+      <div class="lm-buena-mas" data-k="${k}"><input class="lm-input" data-b="porque" placeholder="¿Por qué crees que pasó?" maxlength="120"><input class="lm-input" data-b="tu" placeholder="¿Qué pusiste tú?" maxlength="120"></div></div>`).join('')}</div>
+    ${L.enBajada() ? `<div data-e style="margin-top:8px">${L.li(`<span style="color:var(--mu)">${L.ic('ok')}</span>`, 'Lo que sí he hecho hoy', 'Lo pequeño también cuenta', 'data-a="hechos"')}</div>` : ''}
     ${man && man.cuidar.length ? `<h3 class="lm-sec" data-e>Por la mañana querías cuidar ${L.esc(man.cuidar.map(L.minus).join(' y '))}</h3><div data-e>${L.chips(L.CUMPLIDO, [], 'cu')}</div>` : ''}
+    <div data-e style="margin-top:14px">${L.li(L.pt(L.C.lil, 34), 'Vaciar la cabeza antes de dormir', 'Lo que te da vueltas, a una caja hasta mañana', 'data-a="vaciar"')}</div>
     </div></div><div class="lm-abajo"><button class="lm-btn tq tq-g" data-a="ok">Cerrar el día</button></div>`;
+  $$('[data-b="que"]', el).forEach(inp => inp.addEventListener('input', () => $(`.lm-buena-mas[data-k="${inp.dataset.k}"]`, el).classList.toggle('lm-ver', !!inp.value.trim())));
   $$('.lm-hero .lm-orb', el).forEach((h, k) => h.animate([{ opacity: 0, translate: '0 46px', rotate: '-8deg' }, { opacity: 1, translate: '0 0', rotate: '0deg' }], { duration: 900, delay: k * 120, easing: 'cubic-bezier(.16,.8,.2,1)', fill: 'backwards' }));
   L.entrar(el, 260);
   capa.acc = {
+    hechos: () => L.abrir('hechos', {}, 'sube'), vaciar: () => L.abrir('vaciar', {}, 'sube'),
     cu: t => { cumplido = t.dataset.v; $$('[data-a="cu"]', el).forEach(c => c.classList.toggle('lm-si', c === t)); },
     ok: () => {
       L.d.noches = L.d.noches.filter(n => n.fecha !== f);
-      L.d.noches.push({ fecha: f, bien: $('#lm-bien', el).value.trim(), cumplido }); L.guardar(); L.refrescarRaiz();
+      const buenas = $$('.lm-buena', el).map(b => ({ que: $('[data-b="que"]', b).value.trim(), porque: $('[data-b="porque"]', b).value.trim(), tu: $('[data-b="tu"]', b).value.trim() })).filter(b => b.que);
+      L.d.noches.push({ fecha: f, bien: buenas[0]?.que || '', buenas, cumplido }); L.guardar(); L.refrescarRaiz();
       L.cerrar(capa); L.toast('Día cerrado. Que descanses.');
     }
   };
@@ -380,10 +453,16 @@ L.pantallas.momento = (el, o, capa) => {
     <h1 class="lm-t1" data-e style="font-size:34px;margin-top:8px;user-select:text;-webkit-user-select:text">${L.esc(m.texto)}</h1>
     ${(m.con || []).length ? `<h3 class="lm-sec" data-e>Con quién</h3><div data-e>${L.chips(m.con, m.con, 'x')}</div>` : ''}
     ${m.palabra ? `<h3 class="lm-sec" data-e>Cómo te hizo sentir</h3><div class="lm-fila" data-e>${L.pt(c, 40)}<b style="font-family:Gloock;font-weight:400;font-size:22px">${L.esc(m.palabra)}</b></div>` : ''}
+    ${o.oportuno ? `<div class="lm-card" id="lm-fb" data-e style="margin-top:22px"><b>¿Te ha venido bien verlo?</b><small>Así aprendo qué momentos te sirven en cada caso.</small><div class="lm-chips" style="margin-top:10px"><button class="lm-chip tq tq-i" data-a="fb" data-v="1">Sí</button><button class="lm-chip tq tq-i" data-a="fb" data-v="-1">No mucho</button></div></div>` : ''}
     <button class="lm-enlace lm-borrar tq" data-a="borrar" data-e style="margin-top:26px">Borrar este momento</button></div></div>`;
   if (m.foto) L.fotos.leer(m.id).then(d => { if (d) $('#lm-mf', el).src = d; });
   L.entrar(el, 200);
   capa.acc = {
+    fb: async t => {
+      L.d.momentoFeedback[m.id] = (L.d.momentoFeedback[m.id] || 0) + +t.dataset.v; L.guardar();
+      const c = $('#lm-fb', el); await L.anim(c, [{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: L.S });
+      c.innerHTML = `<b>Gracias. Lo tengo en cuenta.</b>`; L.anim(c, [{ opacity: 0, translate: '0 8px' }, { opacity: 1, translate: '0 0' }], { duration: 420, easing: L.E });
+    },
     borrar: async () => {
       const i = L.d.momentos.indexOf(m); L.d.momentos.splice(i, 1); L.guardar();
       await L.cerrar(capa);
