@@ -340,6 +340,19 @@ html[data-tema="oscuro"] .lm-cta::after{content:"";position:absolute;inset:0;bac
 .lm-cta p,.lm-cta .lm-mas{z-index:1}
 html[data-tema="oscuro"] .lm-ms{color:var(--mu2)}
 
+/* ==================== 1.3.0 · cabecera y animación al abrir ==================== */
+.lm-cab{display:flex;align-items:center;height:44px;margin-bottom:12px}
+.lm-cab .lm-rb{margin-left:auto}
+.lm-cab-logo{display:flex;align-items:center;gap:8px;color:var(--ink)}
+.lm-cab-marca{font-family:Gloock;font-size:20px;line-height:1;letter-spacing:-.1px;translate:0 1px}
+.lm-privado{display:flex;align-items:center;gap:6px;color:var(--mu);font-size:13px;margin:-2px 0 16px}
+.lm-cuidado .lm-cab{margin-bottom:14px}
+.lm-intro{position:fixed;inset:0;z-index:50;background:var(--bg);pointer-events:none;overflow:hidden}
+.lm-intro-top{position:fixed;inset:0;z-index:60;pointer-events:none}
+.lm-intro-logo{position:absolute;color:var(--ink)}
+.lm-intro-palabra{position:absolute;left:0;right:0;text-align:center;font-family:Gloock;font-size:44px;color:var(--ink)}
+.lm-intro-glow{position:absolute;border-radius:50%;filter:blur(30px)}
+
 /* ==================== 1.1.0 ==================== */
 .lm-mtira{display:flex;gap:2px;align-items:flex-end}
 .lm-mtira i{flex:1;max-width:10px;border-radius:3px;display:block;transform-origin:bottom}

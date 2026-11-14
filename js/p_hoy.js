@@ -1,4 +1,4 @@
-/* Lumos 1.2.0 · Hoy, apuntar una emoción, mañana, noche y momentos */
+/* Lumos 1.3.0 · Hoy, apuntar una emoción, mañana, noche y momentos */
 'use strict';
 const nombreInf = e => (e.influencias || []).length ? ', por ' + e.influencias.map(x => L.minus(x)).join(' y ') : '';
 
@@ -58,8 +58,9 @@ L.vistas.hoy = el => {
   else if (fr === 'tarde' && !man && new Date().getHours() < 14) dia = L.li(`<span style="color:var(--mu)">${L.ic('sol')}</span>`, 'Empezar el día', '¿Qué quieres cuidar hoy?', 'data-a="manana"');
   else if (noc && fr === 'noche') dia = `<p class="lm-nota-p" style="padding:2px">Día cerrado. Que descanses.</p>`;
   el.innerHTML = `<div class="lm-pad">
-    <div class="lm-priv" data-e>${L.ic('candado', 15)}<span>Solo lo ves tú</span><button class="lm-rb tq tq-i" data-a="ajustes" aria-label="Ajustes">${L.ic('ajustes', 19)}</button></div>
+    ${L.cabecera()}
     <h1 class="lm-t1" data-e>${L.saludo()},<br>${L.esc(p.nombre)}</h1>
+    ${L.privado()}
     <button class="lm-cta tq tq-g" data-a="apuntar" data-e style="display:block;width:100%;text-align:left"><div class="lm-vis">${vis}</div><p>¿Cómo te sientes ahora?</p><span class="lm-mas">${L.ic('mas', 24)}</span></button>
     ${dia ? `<div data-e style="margin-bottom:10px">${dia}</div>` : ''}
     <div class="lm-duo" data-e>
@@ -82,7 +83,7 @@ L.vistas.hoy = el => {
 function vistaCuidado(el) {
   const p = L.d.perfil, hechoHoy = L.d.planHecho[L.hoy()] || [], ps = L.ordenPersonas();
   el.innerHTML = `<div class="lm-pad lm-cuidado">
-    <div class="lm-priv" data-e>${L.ic('candado', 15)}<span>Solo lo ves tú</span><button class="lm-rb tq tq-i" data-a="ajustes" aria-label="Ajustes">${L.ic('ajustes', 19)}</button></div>
+    ${L.cabecera()}
     <h1 class="lm-t1" data-e>Modo cuidado</h1><p class="lm-sub" data-e style="margin-bottom:16px">Solo lo importante, para estos días, ${L.esc(p.nombre)}. Ve despacio.</p>
     <h3 class="lm-sec" data-e style="margin-top:0">Mi plan para hoy</h3>
     <div data-e>${L.d.plan.hago.length ? L.d.plan.hago.map((x, k) => `<button class="lm-hecho tq tq-g ${hechoHoy.includes(k) ? 'lm-hecha' : ''}" data-a="plancheck" data-k="${k}" style="width:100%;text-align:left">${L.checkSvg(hechoHoy.includes(k))}<span>${L.esc(x)}</span></button>`).join('')

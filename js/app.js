@@ -1,4 +1,4 @@
-/* Lumos 1.2.0 · arranque, pestañas y tema */
+/* Lumos 1.3.0 · arranque, pestañas y tema */
 'use strict';
 L.TABS = [['hoy', 'Hoy'], ['animo', 'Ánimo'], ['recursos', 'Recursos'], ['patrones', 'Patrones']];
 L.vistas = {};      /* render de cada pestaña: (el, {primera}) => acciones */
@@ -106,7 +106,7 @@ L.iniciar = async () => {
   const p = L.d.perfil;
   if (!p) { L.montarBienvenida(); }
   else if (p.codigo) { L.montarRaiz(); L.barra(false); L.abrir('codigo', { modo: 'entrar' }, 'fundido'); }
-  else { L.montarRaiz(); L.alEntrar(); }
+  else { L.montarRaiz(); const op = L.introAlAbrir(); if (op) { app.classList.add('lm-listo'); app.style.transition = 'none'; L.intro(op).then(() => { app.style.transition = ''; L.alEntrar(); }); return; } L.alEntrar(); }
   requestAnimationFrame(() => app.classList.add('lm-listo'));
 };
 /* después de entrar: «Hola de nuevo» si han pasado 7 días o más */

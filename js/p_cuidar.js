@@ -1,4 +1,4 @@
-/* Lumos 1.2.0 · ayuda, plan, informe y ajustes */
+/* Lumos 1.3.0 · ayuda, plan, informe y ajustes */
 'use strict';
 
 /* ============================== SI LO ESTÁS PASANDO MUY MAL ============================== */
@@ -154,6 +154,7 @@ L.pantallas.ajustes = (el, o, capa) => {
       <div data-e>${L.li(`<span style="color:var(--mu)">${L.ic('pastilla')}</span>`, 'Mi medicación', 'Pauta y cambios', 'data-a="medicacion"')}</div>
       <div data-e>${L.li(`<span style="color:var(--mu)">${L.ic('calendario')}</span>`, 'Hitos', 'Lo que sale en la gráfica', 'data-a="hitos"')}</div>
       <div data-e>${L.li(`<span style="color:var(--mu)">${L.ic('frase')}</span>`, 'Carta para los días malos', L.d.carta ? 'Escrita' : 'Sin escribir', 'data-a="carta"')}</div>
+      <div data-e>${L.li(`<span style="color:var(--mu)">${L.MARCA('aj', 22, 16)}</span>`, 'Animación al abrir', (L.INTROS.find(x => x[0] === (p.intro || 'amanecer')) || L.INTROS[0])[1], 'data-a="intro"')}</div>
       <div data-e>${L.li(`<span style="color:var(--mu)">${L.ic('flecha')}</span>`, 'Atajos y Salud', 'Abrir Lumos a una hora y pasarle el sueño', 'data-a="atajos"')}</div>
       ${p.demo ? `<div data-e style="margin-top:8px">${L.li(`<span style="color:var(--mu)">${L.ic('salir')}</span>`, 'Salir de los datos de prueba', 'Vuelve a la bienvenida con Lumos vacía', 'data-a="salirdemo"')}</div>` : ''}
       <button class="lm-enlace lm-borrar tq" data-a="borrar" data-e style="margin-top:12px">Borrar todo lo de Lumos</button>
@@ -166,6 +167,7 @@ L.pantallas.ajustes = (el, o, capa) => {
   pintar(true);
   capa.refrescar = () => pintar(false);
   capa.acc = {
+    intro: () => L.hojaIntro(() => pintar(false)),
     nombre: () => {
       const h = L.hoja(`<h2 data-e>Tu nombre</h2><input class="lm-input" id="lm-nn" data-e maxlength="30" value="${L.esc(L.d.perfil.nombre)}" style="margin:8px 0 16px"><button class="lm-btn tq tq-g" data-a="ok" data-e>Guardar</button>`,
         { ok: (t, e, c) => { const v = $('#lm-nn', h.el).value.trim(); if (!v) return; L.d.perfil.nombre = v; L.guardar(); c(); pintar(false); L.refrescarRaiz(); } });
