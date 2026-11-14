@@ -1,9 +1,9 @@
-/* Lumos 1.1.0 · ayuda, plan, informe y ajustes */
+/* Lumos 1.2.0 · ayuda, plan, informe y ajustes */
 'use strict';
 
 /* ============================== SI LO ESTÁS PASANDO MUY MAL ============================== */
 L.pantallas.ayuda = (el, o, capa) => {
-  const pintar = entrada => {
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
     const ps = L.ordenPersonas();
     el.innerHTML = `${L.top('atras')}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra">
       <h1 class="lm-t1" data-e>Si lo estás pasando muy mal</h1><p class="lm-sub" data-e style="margin-bottom:16px">No tienes que poder con esto a solas.</p>
@@ -28,13 +28,14 @@ L.pantallas.ayuda = (el, o, capa) => {
 /* ============================== SEÑALES Y PLAN ============================== */
 L.pantallas.plan = (el, o, capa) => {
   let editar = false;
-  const SEC = [['arriba', 'Señales de que voy hacia arriba', 'Por ejemplo: duermo menos y no estoy cansado'], ['abajo', 'Señales de que voy hacia abajo', 'Por ejemplo: dejo de contestar mensajes'], ['hago', 'Lo que hago cuando las veo', 'Por ejemplo: aviso a alguien de confianza']];
-  const pintar = entrada => {
-    const P = L.d.plan, vacio = !P.arriba.length && !P.abajo.length && !P.hago.length;
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
+    const P = L.d.plan, vacio = L.SECCIONES_PLAN.every(([k]) => !P[k].length);
     el.innerHTML = `${L.top('atras', '', [editar ? 'listo' : 'editar', editar ? 'ok' : 'editar', editar ? 'Listo' : 'Editar'])}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra">
-      <h1 class="lm-t1" data-e>Mis señales y mi plan</h1><p class="lm-sub" data-e>${vacio && !editar ? 'Escríbelo un día tranquilo, para cuando cueste pensar. Toca el lápiz para empezar.' : 'Escrito por ti, para cuando cueste pensar.'}</p>
-      ${SEC.map(([k, t, ph]) => `<h3 class="lm-sec" data-e>${t}</h3><div data-e>${P[k].map((x, i) => `<div class="lm-lin">${L.ic('ok', 17)}<span>${L.esc(x)}</span>${editar ? `<button class="tq tq-i" data-a="quitar" data-k="${k}" data-i="${i}" aria-label="Borrar" style="color:var(--coral)">${L.ic('x', 17)}</button>` : ''}</div>`).join('')}
-        ${editar ? `<input class="lm-input lm-vac" data-k="${k}" placeholder="${ph}" maxlength="100" enterkeyhint="done" style="margin-top:6px">` : !P[k].length ? '<p class="lm-nota-p">Aún vacío.</p>' : ''}</div>`).join('')}
+      <h1 class="lm-t1" data-e>Mis señales y mi plan</h1><p class="lm-sub" data-e>${vacio && !editar ? 'Escríbelo un día tranquilo, para cuando cueste pensar. Toca el lápiz para empezar: te propongo ideas.' : editar ? 'Toca una idea para añadirla, o escribe la tuya.' : 'Escrito por ti, para cuando cueste pensar.'}</p>
+      ${L.SECCIONES_PLAN.map(([k, t, ph]) => `<h3 class="lm-sec" data-e>${t}</h3><div data-e>${P[k].map((x, i) => `<div class="lm-lin">${L.ic(k === 'mal' ? 'x' : 'ok', 17)}<span>${L.esc(x)}</span>${editar ? `<button class="tq tq-i" data-a="quitar" data-k="${k}" data-i="${i}" aria-label="Borrar" style="color:var(--coral)">${L.ic('borrar', 17)}</button>` : ''}</div>`).join('')}
+        ${editar ? `<input class="lm-input lm-vac" data-k="${k}" placeholder="${ph}" maxlength="100" enterkeyhint="done" style="margin-top:6px">
+          <p class="lm-nota-p" style="margin:8px 0 6px">Ideas</p><div class="lm-chips lm-ideas" data-k="${k}">${L.IDEAS_PLAN[k].filter(x => !P[k].includes(x)).map(x => `<button class="lm-chip tq tq-i" data-a="idea" data-k="${k}" data-v="${L.esc(x)}" style="font-size:13.5px;min-height:36px;padding:8px 13px">${L.esc(x)}</button>`).join('')}</div>`
+        : !P[k].length ? '<p class="lm-nota-p">Aún vacío.</p>' : ''}</div>`).join('')}
       <h3 class="lm-sec" data-e>Para entenderte</h3>
       <div data-e>${L.li(L.pt(L.C.ene, 34), 'Tus señales tempranas', 'Las que Lumos aprende de tus fases', 'data-a="senales"')}</div>
       <div data-e>${L.li(L.pt(L.C.lil, 34), 'Carta para los días malos', L.d.carta ? 'Escrita el ' + L.fechaCorta(new Date(L.d.carta.ts)) : 'Escríbela un día tranquilo', 'data-a="carta"')}</div>
@@ -51,7 +52,14 @@ L.pantallas.plan = (el, o, capa) => {
   pintar(true);
   capa.acc = {
     editar: () => { editar = true; pintar(false); L.entrar(el, 0, 30); },
-    listo: () => { document.activeElement?.blur(); editar = false; pintar(false); L.entrar(el, 0, 30); },
+    listo: () => { document.activeElement?.blur(); editar = false; pintar(false); L.entrar(el, 0, 30); L.refrescarRaiz(); },
+    idea: async t => {
+      const k = t.dataset.k, v = t.dataset.v; L.d.plan[k].push(v); L.guardar();
+      await L.anim(t, [{ opacity: 1, scale: 1 }, { opacity: 0, scale: .9 }], { duration: 200, easing: L.S });
+      pintar(false);
+      const filas = $$(`.lm-lin`, el).filter(f => f.textContent.trim() === v); const f = filas[filas.length - 1];
+      if (f) L.anim(f, [{ opacity: 0, translate: '0 8px' }, { opacity: 1, translate: '0 0' }], { duration: 420, easing: L.E });
+    },
     quitar: t => { const k = t.dataset.k, i = +t.dataset.i, v = L.d.plan[k][i]; L.d.plan[k].splice(i, 1); L.guardar(); pintar(false); L.toast('Borrado', () => { L.d.plan[k].splice(i, 0, v); L.guardar(); pintar(false); }); },
     senales: () => L.abrir('senalesTempranas'), carta: () => L.abrir('carta'), medicacion: () => L.abrir('medicacion'),
     avisar: t => { L.d.plan.avisar = !L.d.plan.avisar; t.classList.toggle('lm-on', L.d.plan.avisar); L.guardar(); L.refrescarRaiz(); }
@@ -94,27 +102,41 @@ L.pantallas.informe = (el, o, capa) => {
   capa.acc = { pdf: () => L.imprimirInforme(), fase: t => L.abrir('ficha', { id: t.dataset.id }) };
 };
 L.imprimirInforme = () => {
-  const D = L.datosInforme(), p = L.d.perfil;
-  const tira = mm => { const n = new Date(mm.getFullYear(), mm.getMonth() + 1, 0).getDate(); let b = ''; for (let d = 1; d <= n; d++) { const a = D.m[L.iso(new Date(mm.getFullYear(), mm.getMonth(), d))]; b += `<i style="flex:1;border-radius:1mm;height:${a ? ALTO[a.nivel] / 3.4 : 1.2}mm;background:${a ? L.NIV[a.nivel].c : '#ddd'}"></i>`; } return `<div style="display:flex;align-items:flex-end;gap:3mm;margin:2mm 0"><span style="width:22mm;flex:none;font-size:11px">${L.may(L.MESES[mm.getMonth()])}</span><div style="flex:1;display:flex;align-items:flex-end;gap:.5mm;height:15mm">${b}</div></div>`; };
-  const filas = D.dias.map(d => D.m[L.iso(d)]).filter(Boolean).reverse().map(a => `<tr><td>${L.fechaCorta(L.deIso(a.fecha))}</td><td>${L.NIV[a.nivel].nombre}</td><td>${a.sueno != null ? L.num(a.sueno) + ' h' : ''}</td><td>${a.medicacion ? 'Sí' : 'No'}</td><td>${a.mixto ? 'Sí' : ''}</td><td>${L.esc((a.sintomas || []).join(', '))}</td><td>${L.esc(a.nota || '')}</td></tr>`).join('');
-  const z = $('#lm-impresion');
-  z.innerHTML = `<h1>Informe de Lumos</h1><p>${L.esc(p.nombre)} · del ${L.fechaCorta(D.dias[0])} al ${L.fechaCorta(D.dias[89])} de ${D.dias[89].getFullYear()}</p>
-    <h2>Tres meses de un vistazo</h2>${D.meses.map(tira).join('')}
-    <p style="margin-top:2mm;color:#666">${[2, 1, 0, -1, -2].map(n => `<span style="display:inline-block;width:3mm;height:3mm;border-radius:50%;background:${L.NIV[n].c};vertical-align:middle;margin:0 1mm 0 3mm"></span>${L.NIV[n].nombre}`).join('')}</p>
-    <h2>Cifras</h2><p>Días apuntados: ${D.reg.length} de 90. Estable: ${D.estable ?? '—'} % de los días. Sueño medio: ${D.sueno == null ? '—' : L.num(D.sueno) + ' h'}. Periodos por arriba: ${D.periodos}. Periodos por abajo: ${D.periodosAbajo}. Días sin medicación: ${D.sinMed}. Días mixtos: ${D.mixtos}.</p>
-    ${D.fases.length ? `<h2>Fases</h2><table><thead><tr><th>Fase</th><th>Inicio</th><th>Días</th><th>Sueño medio</th><th>Sin medicación</th><th>Lo que notó primero</th><th>Lo que ayudó</th></tr></thead><tbody>${D.fases.map(f => { const r = (L.d.reflexiones || {})[f.id] || {}; return `<tr><td>${L.may(L.nombreFase(f.tipo))}</td><td>${L.fechaCorta(L.deIso(f.inicio))}</td><td>${f.duracion}</td><td>${f.sueno == null ? '' : L.num(f.sueno) + ' h'}</td><td>${f.sinMed}</td><td>${L.esc((r.primero || []).join(', '))}</td><td>${L.esc((r.ayudo || []).join(', '))}</td></tr>`; }).join('')}</tbody></table>` : ''}
-    ${(() => { const A = L.aprender(), l = ['arriba', 'abajo'].flatMap(t => A[t].filter(x => x.conf !== false).map(x => `${L.may(L.nombreFase(t))}: ${L.textoSenal(x.clave)} (antes de ${x.k} de ${x.n})`)); return l.length ? `<h2>Señales tempranas que se repiten</h2><p>${L.esc(l.join('. '))}.</p>` : ''; })()}
-    ${L.d.plan.arriba.length + L.d.plan.abajo.length ? `<h2>Señales escritas por la persona</h2><p>Hacia arriba: ${L.esc(L.d.plan.arriba.join('; ') || '—')}.<br>Hacia abajo: ${L.esc(L.d.plan.abajo.join('; ') || '—')}.</p>` : ''}
-    ${L.d.medicacion.length ? `<h2>Medicación apuntada</h2><p>${L.esc(L.d.medicacion.map(m => [m.nombre, m.dosis, m.cuando].filter(Boolean).join(', ')).join('; '))}.</p>` : ''}
-    ${(() => { const h = L.d.hitos.filter(x => L.deIso(x.fecha) >= D.dias[0]).sort((a, b) => a.fecha.localeCompare(b.fecha)); return h.length ? `<h2>Hitos y cambios</h2><p>${h.map(x => `${L.fechaCorta(L.deIso(x.fecha))}: ${L.esc(x.texto)}`).join('<br>')}</p>` : ''; })()}
-    <h2>Día a día</h2><table><thead><tr><th>Día</th><th>Ánimo</th><th>Sueño</th><th>Medicación</th><th>Mixto</th><th>Síntomas</th><th>Nota</th></tr></thead><tbody>${filas}</tbody></table>
-    <p style="margin-top:6mm;color:#666">${L.AVISO_ESCALA} Generado con Lumos ${L.VERSION} el ${L.fechaCorta(new Date())}.</p>`;
-  setTimeout(() => window.print(), 60);
+  const D = L.datosInforme(), p = L.d.perfil, P = new L.PDF(), M = P.M, W = P.W - 2 * M;
+  P.y -= 6; P.t(M, P.y, 'Informe de Lumos', 22, true); P.y -= 18;
+  P.t(M, P.y, `${p.nombre} · del ${L.fechaCorta(D.dias[0])} al ${L.fechaCorta(D.dias[89])} de ${D.dias[89].getFullYear()}`, 10, false, '#6E635A'); P.y -= 6;
+  P.titulo('Tres meses de un vistazo');
+  D.meses.forEach(mm => {
+    P.sitio(30); P.y -= 26; P.t(M, P.y + 4, L.may(L.MESES[mm.getMonth()]), 9.5, false, '#6E635A');
+    const n = new Date(mm.getFullYear(), mm.getMonth() + 1, 0).getDate(), x0 = M + 70, bw = (W - 70) / 31;
+    for (let d = 1; d <= n; d++) { const a = D.m[L.iso(new Date(mm.getFullYear(), mm.getMonth(), d))]; const h = a ? [5, 9, 13, 17, 21][a.nivel + 2] : 1.5; P.r(x0 + (d - 1) * bw, P.y, bw - 1.4, h, a ? L.NIV[a.nivel].c : '#DDD6CB'); }
+  });
+  P.y -= 16; let lx = M; [2, 1, 0, -1, -2].forEach(n => { P.r(lx, P.y, 7, 7, L.NIV[n].c); const tx = L.nivelConClinico(n); P.t(lx + 10, P.y + .5, tx, 8, false, '#6E635A'); lx += P.ancho(tx, 8) + 22; });
+  P.titulo('Cifras');
+  P.parrafo(`Días apuntados: ${D.reg.length} de 90. Estable: ${D.estable ?? '—'} % de los días. Sueño medio: ${D.sueno == null ? '—' : L.num(D.sueno) + ' h'}. Periodos por arriba: ${D.periodos}. Periodos por abajo: ${D.periodosAbajo}. Días sin medicación: ${D.sinMed}. Días mixtos: ${D.mixtos}.`, 10);
+  if (D.fases.length) {
+    P.titulo('Fases (3 días o más por arriba o por abajo)');
+    P.tabla(['Fase', 'Inicio', 'Días', 'Sueño', 'Sin med.', 'Lo que notó primero', 'Lo que ayudó'], D.fases.map(f => { const r = (L.d.reflexiones || {})[f.id] || {}; return [L.may(L.nombreFase(f.tipo)), L.fechaCorta(L.deIso(f.inicio)), String(f.duracion), f.sueno == null ? '' : L.num(f.sueno) + ' h', String(f.sinMed), (r.primero || []).join(', '), (r.ayudo || []).join(', ')]; }), [52, 66, 34, 42, 44, 130, W - 368]);
+  }
+  const A = L.aprender(), sen = ['arriba', 'abajo'].flatMap(t => A[t].filter(x => x.conf !== false).map(x => `${L.may(L.nombreFase(t))}: ${L.textoSenal(x.clave)} (antes de ${x.k} de ${x.n})`));
+  if (sen.length) { P.titulo('Señales tempranas que se repiten'); sen.forEach(x => P.parrafo('· ' + x, 9.5)); }
+  const PL = L.d.plan;
+  if (PL.arriba.length + PL.abajo.length + PL.mal.length + PL.hago.length) {
+    P.titulo('Su plan, escrito por la persona');
+    [['Señales hacia arriba', PL.arriba], ['Señales hacia abajo', PL.abajo], ['Lo que le hace mal', PL.mal], ['Lo que hace cuando las ve', PL.hago]].forEach(([t, l]) => { if (!l.length) return; P.parrafo(t, 9.5, true); P.parrafo(l.join('; ') + '.', 9.5, false, '#3A322C'); P.y -= 3; });
+  }
+  if (L.d.medicacion.length) { P.titulo('Medicación apuntada'); P.parrafo(L.d.medicacion.map(m => [m.nombre, m.dosis, m.cuando].filter(Boolean).join(', ')).join('; ') + '.', 9.5); }
+  const hs = L.d.hitos.filter(x => L.deIso(x.fecha) >= D.dias[0]).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  if (hs.length) { P.titulo('Hitos y cambios'); hs.forEach(x => P.parrafo(`${L.fechaCorta(L.deIso(x.fecha))}: ${x.texto}`, 9.5)); }
+  P.titulo('Día a día');
+  P.tabla(['Día', 'Ánimo', 'Sueño', 'Med.', 'Mixto', 'Síntomas', 'Nota'], D.dias.map(d => D.m[L.iso(d)]).filter(Boolean).reverse().map(a => [(x => `${x.getDate()}/${x.getMonth() + 1}`)(L.deIso(a.fecha)), L.NIV[a.nivel].nombre, a.sueno != null ? L.num(a.sueno) + ' h' : '', a.medicacion ? 'Sí' : 'No', a.mixto ? 'Sí' : '', (a.sintomas || []).join(', '), a.nota || '']), [40, 62, 38, 30, 32, 140, W - 342], 8);
+  P.y -= 8; P.parrafo(`${L.AVISO_ESCALA} Generado con Lumos ${L.VERSION} el ${L.fechaCorta(new Date())}.`, 8.5, false, '#8A7E73');
+  L.entregarPDF(P.salida(), `Lumos_informe_${L.hoy()}.pdf`);
 };
 
 /* ============================== AJUSTES ============================== */
 L.pantallas.ajustes = (el, o, capa) => {
-  const pintar = entrada => {
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
     const p = L.d.perfil, np = L.d.palabrasPropias.length, ps = L.d.personas.length;
     const temas = { auto: 'Automático', claro: 'Claro', oscuro: 'Oscuro' };
     el.innerHTML = `${L.top('atras')}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra lm-ajustes">
@@ -186,7 +208,7 @@ L.editarPersona = (p, alFin) => {
   });
 };
 L.pantallas.personas = (el, o, capa) => {
-  const pintar = entrada => {
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
     const ps = L.ordenPersonas();
     el.innerHTML = `${L.top('atras', '', ['anadir', 'mas', 'Añadir'])}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra">
       <h1 class="lm-t1" data-e>Mis personas de confianza</h1><p class="lm-sub" data-e style="margin-bottom:16px">Aparecen en Hablar con alguien y en Si lo estás pasando muy mal. Ordenadas por apellido.</p>
@@ -202,7 +224,7 @@ L.pantallas.personas = (el, o, capa) => {
 
 /* ============================== MIS PALABRAS ============================== */
 L.pantallas.misPalabras = (el, o, capa) => {
-  const pintar = entrada => {
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
     const ps = L.d.palabrasPropias;
     el.innerHTML = `${L.top('atras', '', ['anadir', 'mas', 'Añadir'])}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra">
       <h1 class="lm-t1" data-e>Mis palabras</h1><p class="lm-sub" data-e style="margin-bottom:16px">Las que has añadido al campo de emociones, con el color de su familia.</p>

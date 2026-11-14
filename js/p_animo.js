@@ -1,4 +1,4 @@
-/* Lumos 1.1.0 · escala del ánimo */
+/* Lumos 1.2.0 · escala del ánimo */
 'use strict';
 L.estAnimo = { rango: 'Semana', off: 0 };
 const signo = n => L.NIV[n].signo;
@@ -9,7 +9,7 @@ L.vistas.animo = (el, { primera }) => {
     : [...L.indicios(A).map(i => ({ titulo: L.tituloIndicio(i.tipo), texto: i.texto })), ...L.senales().filter(s => s.tipo === 'med')];
   const cs = L.cruceSueno(), nA = A.n.arriba, nB = A.n.abajo;
   const datos = L.datosPeriodo(E.rango, E.off), rep = L.reparto(datos.vals);
-  const ley = [[rep.estable, `${rep.estable} ${rep.estable === 1 ? 'día' : 'días'} estable`, L.NIV[0].c], [rep.arriba, `${rep.arriba} por arriba`, L.NIV[1].c], [rep.abajo, `${rep.abajo} por abajo`, L.NIV[-1].c]].filter(x => x[0]);
+  const ley = rep.por.filter(([, k]) => k).map(([n, k]) => [k, `${k} ${L.NIV[n].nombre.toLowerCase()}`, L.NIV[n].c]);
   el.innerHTML = `<div class="lm-pad">
     <h1 class="lm-t1" data-e style="margin-bottom:14px">Tu ánimo</h1>
     <div data-e>${an ? L.li(L.pt(L.NIV[an.nivel].c, 40), `Hoy, ${L.NIV[an.nivel].nombre.toLowerCase()}`, [an.sueno != null ? `${L.num(an.sueno)} h de sueño` : '', an.medicacion ? 'medicación tomada' : 'sin medicación', an.mixto ? 'día mixto' : ''].filter(Boolean).join(', '), 'data-a="apuntar"', 'lm-card', L.ic('editar', 18))
@@ -113,7 +113,7 @@ L.pantallas.nivel = (el, o, capa) => {
   const esHoy = fecha === L.hoy();
   el.innerHTML = `${L.top('x', L.fechaLarga(L.deIso(fecha)))}<div class="lm-scroll"><div class="lm-pad lm-contop">
     <h1 class="lm-t1" data-e>¿Cómo ha sido tu ánimo ${esHoy ? 'hoy' : 'ese día'}?</h1><p class="lm-sub" data-e style="margin-bottom:14px">Mira el día entero, no un momento.</p>
-    ${[2, 1, 0, -1, -2].map(n => `<button class="lm-nv tq tq-g ${sel === n ? 'lm-on' : ''}" data-a="n" data-v="${n}" data-e style="width:100%;text-align:left;${sel === n ? `border-color:${L.NIV[n].c}` : ''}">${L.orb(L.NIV[n].c, sel === n ? 86 : 44, sel === n ? 'margin:-14px -8px -14px -14px' : 'margin:0 0 0 -2px')}<div><b>${L.NIV[n].nombre}</b><small>${L.NIV[n].exp}</small></div><span class="lm-ng">${signo(n)}</span></button>`).join('')}
+    ${[2, 1, 0, -1, -2].map(n => `<button class="lm-nv tq tq-g ${sel === n ? 'lm-on' : ''}" data-a="n" data-v="${n}" data-e style="width:100%;text-align:left;${sel === n ? `border-color:${L.NIV[n].c}` : ''}">${L.orb(L.NIV[n].c, sel === n ? 86 : 44, sel === n ? 'margin:-14px -8px -14px -14px' : 'margin:0 0 0 -2px')}<div><b>${L.NIV[n].nombre}${L.NIV[n].clinico ? ` <span style="font-family:Work;font-size:12.5px;color:var(--mu)">${L.NIV[n].clinico.toLowerCase()}</span>` : ''}</b><small>${L.NIV[n].exp}</small></div><span class="lm-ng">${signo(n)}</span></button>`).join('')}
     <p class="lm-nota-p" data-e style="margin-top:10px">${L.AVISO_ESCALA}</p>
   </div></div><div class="lm-abajo"><button class="lm-btn tq tq-g ${sel == null ? 'lm-off' : ''}" data-a="seguir">Seguir</button></div>`;
   L.entrar(el, 280, 55);
@@ -140,16 +140,34 @@ L.pantallas.completar = (el, o, capa) => {
     <div class="lm-card lm-fila" data-e style="margin-top:12px"><span style="color:var(--mu)">${L.ic('cama')}</span><div><b>Horas de sueño</b><small>${deSalud ? 'Desde Salud. Puedes cambiarlo' : 'La noche de antes'}</small></div><div class="lm-step"><button class="tq tq-i" data-a="s" data-v="-.5" aria-label="Menos">${L.ic('menos', 16)}</button><b class="lm-num" id="lm-su">${L.num(sueno)}</b><button class="tq tq-i" data-a="s" data-v=".5" aria-label="Más">${L.ic('mas', 16)}</button></div></div>
     <div class="lm-card lm-fila" data-e style="margin-top:10px"><span style="color:var(--mu)">${L.ic('pastilla')}</span><div><b>Medicación tomada</b><small>Como te la han pautado</small></div>${L.sw(med, 'data-a="med"')}</div>
     <div class="lm-card lm-fila" data-e style="margin-top:10px"><span style="color:var(--mu)">${L.ic('animo')}</span><div><b>Día mixto</b><small>Acelerado y hundido el mismo día</small></div>${L.sw(mixto, 'data-a="mix"')}</div>
-    <h3 class="lm-sec" data-e>¿Algo de esto ${o.fecha === L.hoy() ? 'hoy' : 'ese día'}?</h3><div data-e id="lm-sintz">${L.chips([...L.SINTOMAS, ...L.d.sintomasPropios], sint, 'si')}</div><button class="lm-enlace tq" data-a="nuevoSint" data-e style="text-align:left;margin:4px 0 0;padding-left:2px">Añadir un síntoma tuyo</button>
+    <h3 class="lm-sec" data-e>¿Algo de esto ${o.fecha === L.hoy() ? 'hoy' : 'ese día'}?</h3><div data-e id="lm-sintz"></div>
+    <div id="lm-sintcuid"></div>
+    <div class="lm-fila" data-e style="gap:14px;margin-top:4px"><button class="lm-enlace tq" data-a="nuevoSint" style="margin:0;padding:8px 2px">Añadir un síntoma tuyo</button><button class="lm-enlace tq" data-a="otrosSint" id="lm-otros" style="margin:0 0 0 auto;padding:8px 2px">Ver los de otros niveles</button></div>
     <h3 class="lm-sec" data-e>Nota para tu profesional</h3><textarea class="lm-nota" data-e id="lm-np" rows="3" placeholder="Lo que quieras contar en la consulta">${L.esc(prev?.nota || '')}</textarea>
   </div></div><div class="lm-abajo"><button class="lm-btn tq tq-g" data-a="ok">Guardar el día</button></div>`;
+  let otros = false;
+  const pintarSint = () => {
+    const base = L.SINT_NIV[o.nivel], resto = L.SINTOMAS.filter(x => !base.includes(x));
+    const z = $('#lm-sintz', el);
+    z.innerHTML = L.chips([...base, ...L.d.sintomasPropios.filter(x => !base.includes(x)), ...sint.filter(x => !base.includes(x) && !L.d.sintomasPropios.includes(x))], sint, 'si')
+      + (otros ? `<p class="lm-nota-p" style="margin:14px 0 8px">De otros niveles</p>${L.chips(resto.filter(x => !sint.includes(x) && !L.d.sintomasPropios.includes(x)), [], 'si')}` : '');
+    cuidado();
+  };
+  const cuidado = () => {
+    const z = $('#lm-sintcuid', el), on = sint.includes(L.SINT_CUIDADO);
+    if (on && !z.innerHTML) { z.innerHTML = `<div class="lm-card" style="margin-top:12px"><b>Gracias por apuntarlo</b><small>No tienes que pasar esto a solas. Puedes llamar al 024, gratis y a cualquier hora, o hablar con alguien de confianza ahora.</small><div class="lm-chips" style="margin-top:4px"><a class="lm-pill tq" href="tel:024">Llamar al 024</a><button class="lm-pill lm-claro tq" data-a="ayuda">Tus personas</button></div></div>`; L.anim(z.firstChild, [{ opacity: 0, translate: '0 10px' }, { opacity: 1, translate: '0 0' }], { duration: 460, easing: L.E }); }
+    if (!on) z.innerHTML = '';
+  };
+  pintarSint();
   L.entrar(el, 300, 55);
   capa.acc = {
+    otrosSint: t => { otros = !otros; L.rodar(t, otros ? 'Ver solo los de este nivel' : 'Ver los de otros niveles', true); pintarSint(); },
+    ayuda: () => L.abrir('ayuda'),
     s: t => { const n = Math.max(0, Math.min(16, sueno + +t.dataset.v)); if (n === sueno) return; const sube = n > sueno; sueno = n; L.rodar($('#lm-su', el), L.num(sueno), sube); },
     med: t => { med = !med; t.classList.toggle('lm-on', med); },
     mix: t => { mixto = !mixto; t.classList.toggle('lm-on', mixto); },
-    nuevoSint: () => L.hojaSintoma(v => { if (!sint.includes(v)) sint.push(v); const z = $('#lm-sintz', el); z.innerHTML = L.chips([...L.SINTOMAS, ...L.d.sintomasPropios], sint, 'si'); const c = $(`[data-v="${CSS.escape(v)}"]`, z); if (c) L.anim(c, [{ opacity: 0, scale: .86 }, { opacity: 1, scale: 1 }], { duration: 480, easing: L.M }); }),
-    si: t => { const v = t.dataset.v; sint = sint.includes(v) ? sint.filter(x => x !== v) : [...sint, v]; t.classList.toggle('lm-si'); },
+    nuevoSint: () => L.hojaSintoma(v => { if (!sint.includes(v)) sint.push(v); pintarSint(); const c = $(`#lm-sintz [data-v="${CSS.escape(v)}"]`, el); if (c) L.anim(c, [{ opacity: 0, scale: .86 }, { opacity: 1, scale: 1 }], { duration: 480, easing: L.M }); }),
+    si: t => { const v = t.dataset.v; sint = sint.includes(v) ? sint.filter(x => x !== v) : [...sint, v]; $$(`#lm-sintz [data-v="${CSS.escape(v)}"]`, el).forEach(c => c.classList.toggle('lm-si', sint.includes(v))); cuidado(); },
     ok: async () => {
       L.d.animo = L.d.animo.filter(a => a.fecha !== o.fecha);
       L.d.animo.push({ fecha: o.fecha, nivel: o.nivel, sueno, medicacion: med, mixto, sintomas: sint, nota: $('#lm-np', el).value.trim() });
@@ -162,7 +180,7 @@ L.pantallas.completar = (el, o, capa) => {
 L.pantallas.significado = (el, o, capa) => {
   el.innerHTML = `${L.top('atras')}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra">
     <h1 class="lm-t1" data-e style="margin-bottom:14px">Qué significa cada nivel</h1>
-    ${[2, 1, 0, -1, -2].map(n => `<div class="lm-gl" data-e>${L.orb(L.NIV[n].c, 76, 'margin:-12px -6px -12px -12px')}<div><b>${L.NIV[n].nombre} <span style="font-family:Work;font-size:14px;color:var(--mu)">${signo(n)}</span></b><small>${L.NIV[n].exp}</small></div></div>`).join('')}
+    ${[2, 1, 0, -1, -2].map(n => `<div class="lm-gl" data-e>${L.orb(L.NIV[n].c, 76, 'margin:-12px -6px -12px -12px')}<div><b>${L.NIV[n].nombre} <span style="font-family:Work;font-size:14px;color:var(--mu)">${signo(n)}${L.NIV[n].clinico ? ', ' + L.NIV[n].clinico.toLowerCase() : ''}</span></b><small>${L.NIV[n].exp}</small></div></div>`).join('')}
     <p class="lm-sub" data-e style="margin-top:12px;font-size:14px">${L.AVISO_ESCALA}</p>
     <p class="lm-nota-p" data-e style="margin-top:10px">Cada día apuntas también las horas de sueño, si has tomado la medicación, si ha sido un día mixto y los síntomas que notes. Lumos te avisa con calma si ve tres días seguidos por arriba con el sueño bajando, tres días por abajo o dos días sin medicación.</p>
   </div></div>`;

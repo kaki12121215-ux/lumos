@@ -1,4 +1,4 @@
-/* Lumos 1.1.0 · arranque, pestañas y tema */
+/* Lumos 1.2.0 · arranque, pestañas y tema */
 'use strict';
 L.TABS = [['hoy', 'Hoy'], ['animo', 'Ánimo'], ['recursos', 'Recursos'], ['patrones', 'Patrones']];
 L.vistas = {};      /* render de cada pestaña: (el, {primera}) => acciones */
@@ -71,7 +71,7 @@ L.pintarVista = (conEntrada, retraso = 0) => {
   const vista = $('#lm-vista'); if (!vista) return;
   const top = vista.scrollTop;
   L.accRaiz = L.vistas[L.tabActual](vista, { primera: conEntrada }) || {};
-  if (conEntrada) L.entrar(vista, retraso); else vista.scrollTop = top;
+  if (conEntrada) L.entrar(vista, retraso); else { vista.scrollTop = top; requestAnimationFrame(() => { vista.scrollTop = top; }); }
 };
 L.refrescarRaiz = () => { if ($('#lm-vista')) L.pintarVista(false); };
 L.barra = v => $('.lm-barra')?.classList.toggle('lm-oculta', !v);

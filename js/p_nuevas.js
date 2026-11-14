@@ -1,4 +1,4 @@
-/* Lumos 1.1.0 · pantallas nuevas: señales tempranas, lo aprendido, mirar atrás, lo que sí he hecho,
+/* Lumos 1.2.0 · pantallas nuevas: señales tempranas, lo aprendido, mirar atrás, lo que sí he hecho,
    carta, atajos y Salud, hitos, medicación, tu mes, vaciar la cabeza, lo bueno de la semana… */
 'use strict';
 const colorFase = t => t === 'arriba' ? L.C.ene : L.C.baj;
@@ -14,7 +14,7 @@ const rangoFase = f => { const a = L.deIso(f.inicio), b = L.deIso(f.fin); return
 
 /* ============================== TUS SEÑALES TEMPRANAS ============================== */
 L.pantallas.senalesTempranas = (el, o, capa) => {
-  const pintar = entrada => {
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
     const A = L.aprender(), ind = L.indicios(A), act = L.faseActual();
     const ahora = act && act.dias.length >= 3 ? `<div class="lm-card" data-e><b>Ahora estás en una ${L.nombreFase(act.tipo)}</b><small>Desde el ${L.fechaCorta(L.deIso(act.inicio))}. ${act.tipo === 'abajo' ? 'Los días mejores entre medias también cuentan, pero aún no la doy por terminada.' : 'Puede ser buen momento para bajar el ritmo y mirar tu plan.'}</small><button class="lm-pill tq" data-a="plan">Ver mi plan</button></div>`
       : ind.length ? ind.map(i => `<div class="lm-card" data-e style="margin-bottom:9px"><b>${L.tituloIndicio(i.tipo)}</b><small>${i.texto} No es un diagnóstico: míralo con calma.</small><button class="lm-pill tq" data-a="plan">Ver mi plan</button></div>`).join('')
@@ -61,7 +61,7 @@ L.pantallas.senalesTempranas = (el, o, capa) => {
 
 /* ============================== LO QUE HE APRENDIDO ============================== */
 L.pantallas.aprendido = (el, o, capa) => {
-  const pintar = entrada => {
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
     const fs = L.fases().reverse(), r = L.d.reflexiones || {};
     el.innerHTML = `${L.top('atras')}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra">
       <h1 class="lm-t1" data-e>Lo que he aprendido</h1><p class="lm-sub" data-e style="margin-bottom:16px">Cada subida y cada bajada, cómo empezó y qué te ayudó. Para entenderte, no para juzgarte.</p>
@@ -78,7 +78,7 @@ L.pantallas.aprendido = (el, o, capa) => {
   capa.acc = { ver: t => L.abrir('ficha', { id: t.dataset.id }) };
 };
 L.pantallas.ficha = (el, o, capa) => {
-  const pintar = entrada => {
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
     const f = L.fases().find(x => x.id === o.id); if (!f) return;
     const r = (L.d.reflexiones || {})[f.id], A = L.aprender();
     const vent = (A.ventanas[f.tipo] || []).find(x => x.f.id === f.id), aprendidas = new Set(A[f.tipo].map(s => s.clave));
@@ -110,12 +110,13 @@ L.pantallas.mirarAtras = (el, o, capa) => {
   const candPrimero = [...new Set([...(vent ? [...vent.k].filter(k => /^(sueno|sint|mixto|sin-med|sin-noches|menos)/.test(k)).map(k => L.may(L.textoSenal(k))) : []), ...L.d.plan[f.tipo]])].slice(0, 8);
   const usados = [...new Set(L.d.recursos.filter(r => r.ts >= L.deIso(f.inicio).getTime() && r.ts <= L.mas(L.deIso(f.fin), 1).getTime() && r.ayudo >= 1).map(r => L.RECURSOS[r.recurso]?.nombre).filter(Boolean))];
   const candAyudo = [...new Set([...usados, ...L.d.plan.hago, 'Hablar con alguien', 'Mantener mis horas de sueño', 'Ir más despacio'])].slice(0, 9);
-  const R = { primero: [], ayudo: [], noAyudo: '', distinto: '', primeroTxt: '', ayudoTxt: '' };
+  const candMal = [...new Set([...L.d.plan.mal, ...L.IDEAS_PLAN.mal])].slice(0, 12);
+  const R = { primero: [], ayudo: [], mal: [], noAyudo: '', distinto: '', primeroTxt: '', ayudoTxt: '' };
   const PASOS = [
     { t: `Tu ${L.mesFase(f)}`, s: `${f.duracion} días, ${rangoFase(f)}. Vamos a mirarla con calma, sin juzgar. Son cinco preguntas cortas y puedes saltar las que quieras.`, cuerpo: () => `<div class="lm-card" style="margin-top:6px">${tiraFase(f, 46)}</div>` },
     { t: '¿Qué notaste primero?', s: 'Lo primero que cambió, aunque entonces no le dieras importancia.', cuerpo: () => L.chips(candPrimero, R.primero, 'cp') + `<input class="lm-input" id="lm-mp" placeholder="Otra cosa que notaste" maxlength="100" style="margin-top:12px" value="${L.esc(R.primeroTxt)}">` },
     { t: '¿Qué te ayudó?', s: 'Aunque fuera un poco.', cuerpo: () => L.chips(candAyudo, R.ayudo, 'ca') + `<input class="lm-input" id="lm-ma" placeholder="Otra cosa que te ayudó" maxlength="100" style="margin-top:12px" value="${L.esc(R.ayudoTxt)}">` },
-    { t: '¿Qué no te ayudó?', s: 'También es información útil.', cuerpo: () => `<textarea class="lm-nota" id="lm-mn" rows="4" placeholder="Lo que quieras">${L.esc(R.noAyudo)}</textarea>` },
+    { t: '¿Qué no te ayudó?', s: 'También es información útil.', cuerpo: () => L.chips(candMal, R.mal, 'cm') + `<textarea class="lm-nota" id="lm-mn" rows="3" placeholder="Otra cosa que no te ayudó" style="margin-top:12px">${L.esc(R.noAyudo)}</textarea>` },
     { t: '¿Qué harías distinto la próxima vez?', s: 'Una cosa pequeña basta.', cuerpo: () => `<textarea class="lm-nota" id="lm-md" rows="4" placeholder="Por ejemplo: avisar antes a alguien">${L.esc(R.distinto)}</textarea>` },
     { t: '¿Lo añado a tu plan?', s: 'Marca lo que quieras guardar. Así la próxima vez lo tendrás a mano.', cuerpo: () => sugerencias().map((x, i) => `<button class="lm-hecho tq tq-g lm-sug" data-a="sug" data-i="${i}" style="width:100%;text-align:left">${checkSvg()}<span><small style="display:block;color:var(--mu);font-size:12.5px">${x.donde}</small>${L.esc(x.txt)}</span></button>`).join('') || '<p class="lm-nota-p">No hay nada nuevo que añadir. Lo guardo tal cual en Lo que he aprendido.</p>' }
   ];
@@ -124,6 +125,7 @@ L.pantallas.mirarAtras = (el, o, capa) => {
     const s = [], destino = f.tipo === 'arriba' ? 'Señales de que voy hacia arriba' : 'Señales de que voy hacia abajo';
     [...R.primero, R.primeroTxt].filter(Boolean).forEach(x => { if (!L.d.plan[f.tipo].includes(x)) s.push({ k: f.tipo, txt: x, donde: destino }); });
     [...R.ayudo, R.ayudoTxt, R.distinto].filter(Boolean).forEach(x => { if (!L.d.plan.hago.includes(x)) s.push({ k: 'hago', txt: x, donde: 'Lo que hago cuando las veo' }); });
+    R.mal.forEach(x => { if (!L.d.plan.mal.includes(x)) s.push({ k: 'mal', txt: x, donde: 'Lo que me hace mal o no me ayuda' }); });
     return s;
   };
   const leer = () => {
@@ -148,7 +150,7 @@ L.pantallas.mirarAtras = (el, o, capa) => {
   };
   const tog = (arr, t) => { const v = t.dataset.v, k = arr.indexOf(v); k < 0 ? arr.push(v) : arr.splice(k, 1); t.classList.toggle('lm-si'); };
   capa.acc = {
-    cp: t => tog(R.primero, t), ca: t => tog(R.ayudo, t),
+    cp: t => tog(R.primero, t), ca: t => tog(R.ayudo, t), cm: t => tog(R.mal, t),
     sug: t => { const k = +t.dataset.i, on = !elegidas.has(k); on ? elegidas.add(k) : elegidas.delete(k); marcarCheck(t, on); },
     atras: () => i > 0 ? ir(i - 1, -1) : L.cerrar(capa),
     omitir: () => { L.d.reflexionesOmitidas = [...(L.d.reflexionesOmitidas || []), f.id]; L.guardar(); L.cerrar(capa); L.refrescarRaiz(); },
@@ -157,7 +159,7 @@ L.pantallas.mirarAtras = (el, o, capa) => {
       if (i < PASOS.length - 1) return ir(i + 1, 1);
       const sug = sugerencias(); elegidas.forEach(k => { const x = sug[k]; if (x) L.d.plan[x.k].push(x.txt); });
       L.d.reflexiones = L.d.reflexiones || {};
-      L.d.reflexiones[f.id] = { ts: Date.now(), primero: [...R.primero, R.primeroTxt].filter(Boolean), ayudo: [...R.ayudo, R.ayudoTxt].filter(Boolean), noAyudo: R.noAyudo, distinto: R.distinto };
+      L.d.reflexiones[f.id] = { ts: Date.now(), primero: [...R.primero, R.primeroTxt].filter(Boolean), ayudo: [...R.ayudo, R.ayudoTxt].filter(Boolean), noAyudo: [...R.mal, R.noAyudo].filter(Boolean).join('. '), distinto: R.distinto };
       L.guardar(); await L.cerrar(capa); L.refrescarRaiz(); L.capas.forEach(c => c.refrescar?.());
       L.toast(elegidas.size ? 'Guardado, y añadido a tu plan' : 'Guardado en Lo que he aprendido');
     }
@@ -211,7 +213,7 @@ L.pantallas.hechos = (el, o, capa) => {
 /* ============================== CARTA PARA LOS DÍAS MALOS ============================== */
 L.pantallas.carta = (el, o, capa) => {
   let editar = !L.d.carta;
-  const pintar = entrada => {
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
     const c = L.d.carta;
     el.innerHTML = `<div class="lm-hero" style="height:250px">${L.orb(L.C.lil, 240, 'right:-60px;top:-80px')}</div>${L.top('atras', '', c && !editar ? ['editar', 'editar', 'Editar'] : null)}<div class="lm-scroll"><div class="lm-pad lm-sinbarra" style="padding-top:calc(var(--st) + 110px)">
       <h1 class="lm-t1" data-e>Carta para los días malos</h1>
@@ -289,7 +291,7 @@ L.hojaHito = (fecha, alFin) => {
   });
 };
 L.pantallas.hitos = (el, o, capa) => {
-  const pintar = entrada => {
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
     const hs = [...L.d.hitos].sort((a, b) => b.fecha.localeCompare(a.fecha));
     el.innerHTML = `${L.top('atras', '', ['anadir', 'mas', 'Añadir'])}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra">
       <h1 class="lm-t1" data-e>Hitos</h1><p class="lm-sub" data-e style="margin-bottom:16px">Salen en la gráfica del ánimo como una línea, para ver qué coincidió con qué.</p>
@@ -325,7 +327,7 @@ L.editarMedicacion = (m, alFin) => {
   });
 };
 L.pantallas.medicacion = (el, o, capa) => {
-  const pintar = entrada => {
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
     const ms = L.d.medicacion, cambios = L.d.hitos.filter(h => h.tipo === 'medicacion').sort((a, b) => b.fecha.localeCompare(a.fecha));
     el.innerHTML = `${L.top('atras', '', ['anadir', 'mas', 'Añadir'])}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra">
       <h1 class="lm-t1" data-e>Mi medicación</h1><p class="lm-sub" data-e style="margin-bottom:16px">Para apuntar tu pauta y sus cambios. Lumos no te recuerda tomarla y no da consejos sobre ella: eso es cosa de tu profesional.</p>
@@ -347,13 +349,14 @@ L.hojaSintoma = alFin => {
   setTimeout(() => $('#lm-sn', h.el)?.focus(), 450);
 };
 L.pantallas.misSintomas = (el, o, capa) => {
-  const pintar = entrada => {
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
     el.innerHTML = `${L.top('atras', '', ['anadir', 'mas', 'Añadir'])}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra">
       <h1 class="lm-t1" data-e>Mis síntomas</h1><p class="lm-sub" data-e style="margin-bottom:16px">Los que eliges al completar el día. Añade todos los tuyos.</p>
       <h3 class="lm-sec" data-e style="margin-top:0">Los tuyos</h3>
       ${L.d.sintomasPropios.length ? L.d.sintomasPropios.map((s, i) => `<div class="lm-li lm-card" data-e><span style="color:var(--mu)">${L.ic('ok', 18)}</span><div><b>${L.esc(s)}</b></div><button class="tq tq-i" data-a="quitar" data-i="${i}" aria-label="Borrar" style="color:var(--coral);padding:8px">${L.ic('borrar', 19)}</button></div>`).join('') : '<p class="lm-nota-p" data-e>Aún no has añadido ninguno.</p>'}
       <button class="lm-btn lm-sec2 tq tq-g" data-a="anadir" data-e style="margin-top:12px">Añadir un síntoma</button>
-      <h3 class="lm-sec" data-e>Los de Lumos</h3><div data-e>${L.chips(L.SINTOMAS, [], 'x')}</div>
+      <h3 class="lm-sec" data-e>Los de Lumos</h3><p class="lm-nota-p" data-e style="margin-top:-4px">Al completar el día te salen primero los del nivel que eliges.</p>
+      ${[2, 1, 0, -1, -2].map(n => `<p class="lm-campo-n" data-e style="margin:14px 0 8px;font-size:13px;color:var(--mu)">${L.nivelConClinico(n)}</p><div data-e>${L.chips(L.SINT_NIV[n], [], 'x')}</div>`).join('')}
     </div></div>`;
     if (entrada) L.entrar(el, 200, 55);
   };

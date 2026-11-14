@@ -1,4 +1,4 @@
-/* Lumos 1.1.0 · señales tempranas: fases, lo que pasa antes, indicios y aprendizaje */
+/* Lumos 1.2.0 · señales tempranas: fases, lo que pasa antes, indicios y aprendizaje */
 'use strict';
 /* Una fase es una racha de 3 o más días por arriba (+1, +2) o por abajo (−1, −2).
    Un día estable en medio no la corta: solo se da por terminada tras 3 días estables

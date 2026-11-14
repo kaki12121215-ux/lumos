@@ -1,4 +1,4 @@
-/* Lumos 1.0.0 · bienvenida, perfil, código y «Hola de nuevo» */
+/* Lumos 1.2.0 · bienvenida, perfil, código y «Hola de nuevo» */
 'use strict';
 L.LOGO = (s = 96, id = 'lg') => `<svg class="lm-logo" width="${s}" height="${s}" viewBox="0 0 100 100" aria-label="Lumos"><defs><radialGradient id="${id}a" cx="50%" cy="100%" r="80%"><stop offset="0" stop-color="#F2CB6B"/><stop offset=".55" stop-color="#F2A65A"/><stop offset="1" stop-color="#E9705E"/></radialGradient><clipPath id="${id}c"><rect x="0" y="0" width="100" height="69"/></clipPath></defs><g clip-path="url(#${id}c)"><path class="lm-sol" d="M10 66 A40 40 0 0 1 90 66 Z" fill="url(#${id}a)"/></g><rect class="lm-raya" x="10" y="74" width="80" height="7" rx="3.5" fill="currentColor"/></svg>`;
 

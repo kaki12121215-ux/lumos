@@ -1,4 +1,4 @@
-/* Lumos 1.1.0 · Hoy, apuntar una emoción, mañana, noche y momentos */
+/* Lumos 1.2.0 · Hoy, apuntar una emoción, mañana, noche y momentos */
 'use strict';
 const nombreInf = e => (e.influencias || []).length ? ', por ' + e.influencias.map(x => L.minus(x)).join(' y ') : '';
 
@@ -56,11 +56,12 @@ L.vistas.hoy = el => {
   if (fr === 'manana' && !man) dia = L.li(`<span style="color:var(--mu)">${L.ic('sol')}</span>`, 'Empezar el día', '¿Qué quieres cuidar hoy?', 'data-a="manana"');
   else if (fr === 'noche' && !noc) dia = L.li(`<span style="color:var(--mu)">${L.ic('luna')}</span>`, 'Cerrar el día', '¿Qué te llevas de hoy?', 'data-a="noche"');
   else if (fr === 'tarde' && !man && new Date().getHours() < 14) dia = L.li(`<span style="color:var(--mu)">${L.ic('sol')}</span>`, 'Empezar el día', '¿Qué quieres cuidar hoy?', 'data-a="manana"');
-  else if (noc) dia = `<p class="lm-nota-p" style="padding:6px 2px">Día cerrado. Que descanses.</p>`;
+  else if (noc && fr === 'noche') dia = `<p class="lm-nota-p" style="padding:2px">Día cerrado. Que descanses.</p>`;
   el.innerHTML = `<div class="lm-pad">
     <div class="lm-priv" data-e>${L.ic('candado', 15)}<span>Solo lo ves tú</span><button class="lm-rb tq tq-i" data-a="ajustes" aria-label="Ajustes">${L.ic('ajustes', 19)}</button></div>
     <h1 class="lm-t1" data-e>${L.saludo()},<br>${L.esc(p.nombre)}</h1>
     <button class="lm-cta tq tq-g" data-a="apuntar" data-e style="display:block;width:100%;text-align:left"><div class="lm-vis">${vis}</div><p>¿Cómo te sientes ahora?</p><span class="lm-mas">${L.ic('mas', 24)}</span></button>
+    ${dia ? `<div data-e style="margin-bottom:10px">${dia}</div>` : ''}
     <div class="lm-duo" data-e>
       ${p.escala !== false ? `<button class="lm-card tq tq-g" data-a="escala" style="text-align:left">${an ? L.pt(L.NIV[an.nivel].c, 32) : L.pt(L.C.ene, 32)}<div><b>Tu escala</b><small>${an ? 'Hoy, ' + L.NIV[an.nivel].nombre.toLowerCase() : 'Hoy sin apuntar'}</small></div></button>` : `<button class="lm-card tq tq-g" data-a="diario" style="text-align:left"><span style="color:var(--mu)">${L.ic('libro')}</span><div><b>Diario</b><small>Todo lo apuntado</small></div></button>`}
       <button class="lm-card tq tq-g" data-a="momentos" style="text-align:left"><span style="color:var(--mu)">${L.ic('tarro')}</span><div><b>Momentos</b><small>${nMom ? (nMom === 1 ? 'Uno guardado' : nMom + ' guardados') : 'Guarda lo bueno'}</small></div></button>
@@ -69,7 +70,6 @@ L.vistas.hoy = el => {
     <h3 class="lm-sec" data-e>Hoy</h3>
     <div data-e>${es.length ? es.map(e => `<button class="lm-ent tq tq-g" data-a="entrada" data-id="${e.id}" style="width:100%;text-align:left">${L.pt(L.colorDe(e.palabra), 38)}<div><p>${L.esc(e.palabra)}</p><small>A las ${L.hora(e.ts)}${nombreInf(e)}${e.tipo === 'dia' ? ' · el día' : ''}</small></div></button>`).join('') :
       `<p class="lm-vacia">Aún no has apuntado nada hoy. Cuando quieras, toca el botón de arriba: son veinte segundos.</p>`}</div>
-    <div data-e style="margin-top:14px">${dia}</div>
     ${md ? `<h3 class="lm-sec" data-e>Un momento que vuelve</h3><button class="lm-mom lm-dia tq tq-g" data-a="momdia" data-id="${md.id}" data-e style="width:100%;text-align:left"><div class="lm-vis">${L.orb(md.palabra ? L.colorDe(md.palabra) : L.C.ale, 170, 'right:-60px;top:-60px')}</div><div><b>${L.esc(md.texto)}</b><small>${L.cuando(new Date(md.ts))}</small></div></button>` : ''}
     <div class="lm-ayudas" data-e>
       <button class="lm-card tq tq-g" data-a="diario"><span style="color:var(--mu)">${L.ic('libro', 20)}</span>Diario</button>
@@ -87,6 +87,7 @@ function vistaCuidado(el) {
     <h3 class="lm-sec" data-e style="margin-top:0">Mi plan para hoy</h3>
     <div data-e>${L.d.plan.hago.length ? L.d.plan.hago.map((x, k) => `<button class="lm-hecho tq tq-g ${hechoHoy.includes(k) ? 'lm-hecha' : ''}" data-a="plancheck" data-k="${k}" style="width:100%;text-align:left">${L.checkSvg(hechoHoy.includes(k))}<span>${L.esc(x)}</span></button>`).join('')
       : `<div class="lm-card"><b>Aún no has escrito tu plan</b><small>Cuando estés más tranquilo, apunta lo que te ayuda en días así.</small><button class="lm-pill tq" data-a="plan">Escribirlo</button></div>`}</div>
+    ${L.d.plan.mal.length ? `<h3 class="lm-sec" data-e>Hoy, mejor evitar</h3><div data-e>${L.chips(L.d.plan.mal, [], 'x')}</div>` : ''}
     <div data-e style="margin-top:16px">
       <button class="lm-btn tq tq-g" data-a="apuntar">Apuntar cómo estoy</button>
       <button class="lm-btn lm-sec2 tq tq-g" data-a="resp">Respirar despacio un minuto</button>
@@ -116,7 +117,9 @@ L.pantallas.campo = (el, o, capa) => {
   const pal = L.palabras(), COL = 9, SX = 116, SY = 101, R = 59;
   const W = () => el.clientWidth || innerWidth, H = () => el.clientHeight || innerHeight;
   el.innerHTML = `<div class="lm-campo"></div><div class="lm-campo-velo"></div>
-    ${L.top(o.elegir ? 'atras' : 'x', o.tipo === 'dia' ? '¿Qué palabra resume el día?' : '¿Qué palabra encaja?', ['buscar', 'lupa', 'Buscar'])}
+    <div class="lm-top lm-top-campo"><button class="lm-rb tq tq-i" data-a="${o.elegir ? 'atras' : 'cerrar'}" aria-label="${o.elegir ? 'Volver' : 'Cerrar'}">${L.ic(o.elegir ? 'atras' : 'x', 20)}</button><span></span>
+      <div style="display:flex;gap:8px"><button class="lm-rb lm-rb-s tq tq-i" data-a="buscar" aria-label="Buscar una palabra">${L.ic('lupa', 18)}</button><button class="lm-rb lm-rb-s tq tq-i" data-a="nueva" aria-label="Añadir una palabra">${L.ic('mas', 18)}</button></div></div>
+    <p class="lm-campo-t">${o.tipo === 'dia' ? '¿Qué palabra resume el día?' : '¿Qué palabra encaja?'}</p>
     <div class="lm-pista">Desliza para ver más y toca la que encaje</div>`;
   const campo = $('.lm-campo', el);
   /* rejilla hexagonal, fila a fila por el espectro */
@@ -216,7 +219,9 @@ L.pantallas.campo = (el, o, capa) => {
     h.style.visibility = ''; cl.remove(); await nueva;
     n.el.style.opacity = ''; eligiendo = false;
   };
-  capa.acc = { buscar: () => L.abrir('buscar', { flujo: o.flujo, tipo: o.tipo, elegir: o.elegir ? w => { L.cerrar(capa, true); o.elegir(w); } : null }, 'lado') };
+  capa.acc = {
+    nueva: () => L.hojaPalabra('', async w => { await L.cerrar(capa, true); L.abrir('campo', { ...o, inicio: w, nuevaPalabra: w }, 'fundido'); setTimeout(() => L.toast(`«${w}» está ya en tu mapa`), 700); }),
+    buscar: () => L.abrir('buscar', { flujo: o.flujo, tipo: o.tipo, elegir: o.elegir ? w => { L.cerrar(capa, true); o.elegir(w); } : null }, 'lado') };
   capa.refrescar = () => { eligiendo = false; };
   requestAnimationFrame(() => {
     pintar();
@@ -224,6 +229,7 @@ L.pantallas.campo = (el, o, capa) => {
     if (!L.rm) {
       const cx = W() / 2, cy = H() * .5;
       nodos.forEach(n => { if (n.el.style.visibility === 'hidden') return; const d = Math.hypot(n.x - cx, n.y - cy); n.el.animate([{ opacity: 0, scale: .5 }, { opacity: 1, scale: 1 }], { duration: 620, delay: 40 + d * .75, easing: L.M, fill: 'backwards', composite: 'add' }); });
+      if (o.nuevaPalabra) { const nn = nodos.find(n => n.p.palabra === o.nuevaPalabra); if (nn) nn.el.animate([{ scale: 1 }, { scale: 1.18 }, { scale: 1 }], { duration: 700, delay: 500, easing: 'ease-out', composite: 'add' }); }
     }
   });
   addEventListener('resize', pintar);
@@ -339,7 +345,7 @@ L.pantallas.saborear = (el, o, capa) => {
 
 /* ============================== UNA ENTRADA DEL DIARIO ============================== */
 L.pantallas.entrada = (el, o, capa) => {
-  const pintar = (editando) => {
+  const pintar = (editando) => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
     const e = L.d.emociones.find(x => x.id === o.id); if (!e) { L.cerrar(capa); return; }
     const p = L.palabra(e.palabra), d = new Date(e.ts);
     const hechos = L.d.recursos.filter(r => r.antes === e.id);
@@ -428,7 +434,7 @@ L.pantallas.noche = (el, o, capa) => {
 
 /* ============================== MOMENTOS ============================== */
 L.pantallas.momentos = (el, o, capa) => {
-  const pintar = entrada => {
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
     const ms = [...L.d.momentos].sort((a, b) => b.ts - a.ts), n = ms.length;
     el.innerHTML = `${L.top('atras', '', ['nuevo', 'mas', 'Momento nuevo'])}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra">
       <h1 class="lm-t1" data-e>Momentos</h1>

@@ -1,7 +1,7 @@
-/* Lumos 1.1.0 · base: datos, fechas, colores, iconos, capas y animaciones */
+/* Lumos 1.2.0 · base: datos, fechas, colores, iconos, capas y animaciones */
 'use strict';
 const L = window.L = {};
-L.VERSION = '1.1.0';
+L.VERSION = '1.2.0';
 L.rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change', e => { L.rm = e.matches; });
 
@@ -17,7 +17,7 @@ L.raf = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame
 const CLAVE = 'lumos:datos';
 L.vacio = () => ({
   perfil: null, emociones: [], animo: [], recursos: [], mananas: [], noches: [], momentos: [],
-  personas: [], plan: { arriba: [], abajo: [], hago: [], avisar: true }, palabrasPropias: [], frasesPropias: [],
+  personas: [], plan: { arriba: [], abajo: [], mal: [], hago: [], avisar: true }, trampasPropias: [], palabrasPropias: [], frasesPropias: [],
   /* 1.1.0 */
   sintomasPropios: [], senalesConf: {}, reflexiones: {}, reflexionesOmitidas: [], hechos: [], planHecho: {}, momentoFeedback: {}, momentoDia: null,
   carta: null, cartaVista: null, hitos: [], medicacion: [], salud: {}, vaciados: [], historiaVista: null
@@ -25,6 +25,7 @@ L.vacio = () => ({
 L.cargar = () => {
   try { const t = localStorage.getItem(CLAVE); L.d = t ? Object.assign(L.vacio(), JSON.parse(t)) : L.vacio(); }
   catch (e) { L.d = L.vacio(); }
+  L.d.plan = Object.assign({ arriba: [], abajo: [], mal: [], hago: [], avisar: true }, L.d.plan || {});
 };
 L.guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify(L.d)); } catch (e) { L.toast('No se ha podido guardar: el móvil no tiene sitio.'); } };
 L.borrarTodo = async () => {

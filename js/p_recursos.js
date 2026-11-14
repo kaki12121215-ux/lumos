@@ -1,4 +1,4 @@
-/* Lumos 1.1.0 · recursos para el momento */
+/* Lumos 1.2.0 · recursos para el momento */
 'use strict';
 const colorCat = id => L.CATS.find(c => c.id === L.RECURSOS[id].cat).c;
 const deCat = cat => Object.entries(L.RECURSOS).filter(([, r]) => r.cat === cat);
@@ -6,7 +6,7 @@ const cuantos = (n, cosa) => `${L.may(L.enLetra(n))} ${cosa}${n === 1 ? '' : 's'
 
 L.vistas.recursos = el => {
   const top = L.lasQueAyudan()[0];
-  const subCat = c => c.id === 'hablar' ? 'Tus personas' : c.id === 'frases' ? 'Las tuyas y otras' : c.id === 'moverse' ? cuantos(deCat(c.id).length, 'idea') : cuantos(deCat(c.id).length, 'ejercicio');
+  const subCat = c => c.id === 'hablar' ? 'Tus personas' : c.id === 'frases' ? `${L.FRASES.length + (L.d.frasesPropias || []).length} frases` : cuantos(deCat(c.id).length, c.id === 'moverse' || c.id === 'subida' || c.id === 'dormir' ? 'idea' : 'ejercicio');
   el.innerHTML = `<div class="lm-pad">
     <h1 class="lm-t1" data-e style="margin-bottom:14px">Recursos</h1>
     <div data-e>${top ? L.li(L.pt(colorCat(top.id), 40), 'Lo que más te ayuda', `${L.RECURSOS[top.id].nombre} te ha servido ${top.si} de ${top.n} veces`, `data-a="rec" data-v="${top.id}"`)
@@ -25,9 +25,9 @@ L.pantallas.categoria = (el, o, capa) => {
   const c = L.CATS.find(x => x.id === o.cat), lista = deCat(o.cat), ay = L.lasQueAyudan();
   el.innerHTML = `<div class="lm-hero" style="height:260px">${L.orb(c.c, 260, 'right:-70px;top:-80px')}</div>${L.top('atras')}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra" style="padding-top:calc(var(--st) + 110px)">
     <h1 class="lm-t1" data-e>${c.nombre}</h1>
-    <p class="lm-sub" data-e style="margin-bottom:16px">${{ respirar: 'Respirar más despacio le dice al cuerpo que puede bajar el ritmo.', cuerpo: 'Cuando la cabeza va muy rápido, el cuerpo te trae al presente.', pensamiento: 'Mirar lo que te dices, sin creértelo del todo.', moverse: 'Mover el cuerpo un poco cambia cómo te sientes.' }[o.cat] || ''}</p>
-    ${lista.map(([id, r]) => { const a = ay.find(x => x.id === id); return `<div data-e>${L.li(L.pt(c.c, 38), r.nombre, r.sub + (a ? ` · te ha servido ${a.si} de ${a.n}` : ''), `data-a="rec" data-v="${id}"`)}</div>`; }).join('')}
-    ${o.cat === 'pensamiento' ? `<div data-e>${L.li(L.pt(c.c, 38), 'Las trampas del pensamiento', 'Conocerlas para verlas', 'data-a="trampas"')}</div><div data-e>${L.li(L.pt(c.c, 38), 'Tus otras formas de verlo', 'Cómo miraste otras veces lo que te decías', 'data-a="otras"')}</div>` : ''}
+    <p class="lm-sub" data-e style="margin-bottom:16px">${c.sub || ''}</p>
+    ${lista.map(([id, r]) => { const a = ay.find(x => x.id === id); return `<div data-e>${L.li(L.pt(c.c, 38), r.nombre, r.sub + (a ? `. Te ha servido ${a.si} de ${a.n}` : ''), `data-a="rec" data-v="${id}"`)}</div>`; }).join('')}
+    ${o.cat === 'pensamiento' ? `<div data-e>${L.li(L.pt(c.c, 38), 'Tus otras formas de verlo', 'Cómo miraste otras veces lo que te decías', 'data-a="otras"')}</div>` : ''}
   </div></div>`;
   L.entrar(el, 180, 55);
   capa.acc = { rec: t => L.abrirRecurso(t.dataset.v), trampas: () => L.abrir('trampas'), otras: () => L.abrir('otrasFormas') };
@@ -42,6 +42,7 @@ L.abrirRecurso = (id, op = {}) => {
   if (R.tipo === 'hablar') return L.abrir('hablar', o, 'lado');
   if (R.tipo === 'frases') return L.abrir('frases', o, 'lado');
   if (R.tipo === 'vaciar') return L.abrir('vaciar', {}, 'sube');
+  if (R.tipo === 'lista') return L.abrir('trampas');
 };
 
 /* ============================== RESPIRAR ============================== */
@@ -126,7 +127,7 @@ L.pantallas.pensamiento = (el, o, capa) => {
   let sel = [];
   el.innerHTML = `${L.top('atras', 'Mirar el pensamiento', ['cerrar', 'x', 'Cerrar'])}<div class="lm-scroll"><div class="lm-pad lm-contop">
     <h3 class="lm-sec" data-e style="margin-top:0">Lo que te estás diciendo</h3><textarea class="lm-nota lm-gloock" data-e id="lm-dice" rows="3" placeholder="Escríbelo tal cual te suena por dentro"></textarea>
-    <h3 class="lm-sec" data-e>¿Reconoces alguna trampa?</h3><div data-e>${L.chips(L.TRAMPAS.map(t => t[0]), [], 'tr')}</div>
+    <h3 class="lm-sec" data-e>¿Reconoces alguna trampa?</h3><div data-e id="lm-trz">${L.chips(L.trampas().map(t => t[0]), [], 'tr')}</div><button class="lm-enlace tq" data-a="nuevaTrampa" data-e style="text-align:left;margin:6px 0 0;padding:8px 2px">Añadir otra trampa tuya</button>
     <div id="lm-trx"></div>
     <h3 class="lm-sec" data-e>Otra forma de verlo</h3><textarea class="lm-nota" data-e id="lm-otra" rows="3" placeholder="¿Qué le dirías a un amigo que piensa esto?"></textarea>
   </div></div><div class="lm-abajo"><button class="lm-btn tq tq-g" data-a="ok">Guardar</button></div>`;
@@ -136,22 +137,41 @@ L.pantallas.pensamiento = (el, o, capa) => {
       const v = t.dataset.v, on = !sel.includes(v); sel = on ? [...sel, v] : sel.filter(x => x !== v); t.classList.toggle('lm-si', on);
       const z = $('#lm-trx', el), ult = sel[sel.length - 1];
       if (!ult) { const c = $('.lm-card', z); if (c) L.anim(c, [{ opacity: 1 }, { opacity: 0, scale: .94 }], { duration: 220, easing: L.S }).then(() => z.innerHTML = ''); return; }
-      const def = L.TRAMPAS.find(x => x[0] === ult)[1];
+      const def = L.trampas().find(x => x[0] === ult)[1];
       const otra = L.otrasFormas(ult)[0];
       z.innerHTML = `<div class="lm-card" style="margin-top:12px"><b>${ult}</b><small>${def}</small></div>${otra ? `<div class="lm-card" style="margin-top:8px"><b>La otra vez que viste esta trampa</b><small>Lo miraste así:</small><p style="font-family:Gloock;font-size:19px;line-height:1.25;margin-top:6px">${L.esc(otra.nota.otra)}</p><small style="margin-top:6px">${L.cuando(new Date(otra.ts))}</small></div>` : ''}`;
       $$('.lm-card', z).forEach((c, k) => L.anim(c, [{ opacity: 0, translate: '0 12px' }, { opacity: 1, translate: '0 0' }], { duration: 460, delay: k * 60, easing: L.E }));
       if (false) L.anim($('.lm-card', z), [{ opacity: 0, translate: '0 12px' }, { opacity: 1, translate: '0 0' }], { duration: 460, easing: L.E });
     },
+    nuevaTrampa: () => L.hojaTrampa(n => { sel.push(n); $('#lm-trz', el).innerHTML = L.chips(L.trampas().map(t => t[0]), sel, 'tr'); const c = $(`#lm-trz [data-v="${CSS.escape(n)}"]`, el); if (c) L.anim(c, [{ opacity: 0, scale: .86 }, { opacity: 1, scale: 1 }], { duration: 480, easing: L.M }); }),
     ok: () => { o.nota = { dice: $('#lm-dice', el).value.trim(), trampas: sel, otra: $('#lm-otra', el).value.trim() }; document.activeElement?.blur(); L.abrir('ayudo', o, 'fundido'); }
   };
 };
+L.hojaTrampa = alFin => {
+  const h = L.hoja(`<h2 data-e>Una trampa tuya</h2><p class="lm-sub" data-e style="margin-bottom:14px">Ponle un nombre que reconozcas. Se guarda para siempre en tu lista.</p>
+    <input class="lm-input" id="lm-tn" data-e placeholder="Por ejemplo, «Si no contestan, es que pasa algo»" maxlength="50">
+    <input class="lm-input" id="lm-td" data-e placeholder="Cómo funciona (opcional)" maxlength="100">
+    <button class="lm-btn tq tq-g" data-a="ok" data-e style="margin-top:8px">Añadir trampa</button>`, {
+    ok: (t, e, c) => { const n = L.may($('#lm-tn', h.el).value.trim()); if (!n) return; if (!L.trampas().some(x => x[0].toLowerCase() === n.toLowerCase())) { L.d.trampasPropias.push({ nombre: n, def: $('#lm-td', h.el).value.trim() }); L.guardar(); } c(); alFin?.(n); }
+  });
+  setTimeout(() => $('#lm-tn', h.el)?.focus(), 450);
+};
 L.pantallas.trampas = (el, o, capa) => {
-  el.innerHTML = `${L.top('atras')}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra">
-    <h1 class="lm-t1" data-e>Las trampas del pensamiento</h1><p class="lm-sub" data-e style="margin-bottom:16px">Todos caemos en ellas. Ponerles nombre ayuda a no creérselas del todo.</p>
-    ${L.TRAMPAS.map(([n, d]) => `<div class="lm-card" data-e style="margin-bottom:9px"><b>${n}</b><small>${d}</small></div>`).join('')}
-    <button class="lm-btn tq tq-g" data-a="probar" data-e style="margin-top:14px">Mirar un pensamiento</button></div></div>`;
-  L.entrar(el, 200, 55);
-  capa.acc = { probar: () => L.abrirRecurso('mirar-pensamiento') };
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
+    const propias = L.d.trampasPropias || [];
+    el.innerHTML = `${L.top('atras', '', ['nueva', 'mas', 'Añadir'])}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra">
+      <h1 class="lm-t1" data-e>Las trampas del pensamiento</h1><p class="lm-sub" data-e style="margin-bottom:16px">Todos caemos en ellas. Ponerles nombre ayuda a no creérselas del todo.</p>
+      <button class="lm-btn tq tq-g" data-a="probar" data-e style="margin-bottom:16px">Mirar un pensamiento</button>
+      ${propias.length ? `<h3 class="lm-sec" data-e style="margin-top:0">Las tuyas</h3>${propias.map((t, i) => `<div class="lm-card lm-fila" data-e style="margin-bottom:9px"><div><b>${L.esc(t.nombre)}</b><small>${L.esc(t.def || 'Una trampa tuya.')}</small></div><button class="tq tq-i" data-a="quitar" data-i="${i}" aria-label="Borrar" style="color:var(--coral);padding:6px">${L.ic('borrar', 18)}</button></div>`).join('')}<h3 class="lm-sec" data-e>Las más comunes</h3>` : ''}
+      ${L.TRAMPAS.map(([n, d]) => `<div class="lm-card" data-e style="margin-bottom:9px"><b>${n}</b><small>${d}</small></div>`).join('')}
+      <button class="lm-btn lm-sec2 tq tq-g" data-a="nueva" data-e style="margin-top:12px">Añadir una trampa tuya</button></div></div>`;
+    if (entrada) L.entrar(el, 200, 55);
+  };
+  pintar(true);
+  capa.acc = {
+    probar: () => L.abrirRecurso('mirar-pensamiento'), nueva: () => L.hojaTrampa(() => pintar(false)),
+    quitar: t => { const i = +t.dataset.i, x = L.d.trampasPropias[i]; L.d.trampasPropias.splice(i, 1); L.guardar(); pintar(false); L.toast('Trampa borrada', () => { L.d.trampasPropias.splice(i, 0, x); L.guardar(); pintar(false); }); }
+  };
 };
 
 /* ============================== HACERLO (moverse) ============================== */
@@ -170,7 +190,7 @@ L.pantallas.hecho = (el, o, capa) => {
 L.ordenPersonas = () => [...L.d.personas].sort((a, b) => L.apellido(a.nombre).localeCompare(L.apellido(b.nombre), 'es'));
 L.telLimpio = t => (t || '').replace(/[^\d+]/g, '');
 L.pantallas.hablar = (el, o, capa) => {
-  const pintar = entrada => {
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
     const ps = L.ordenPersonas();
     el.innerHTML = `${L.top('atras')}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra">
       <h1 class="lm-t1" data-e>Hablar con alguien</h1><p class="lm-sub" data-e style="margin-bottom:16px">No hace falta contarlo todo. A veces basta con un «¿tienes un rato?».</p>
@@ -200,20 +220,23 @@ L.hojaPersona = p => {
 
 /* ============================== FRASES ============================== */
 L.pantallas.frases = (el, o, capa) => {
-  const pintar = entrada => {
-    const propias = L.d.frasesPropias || [];
-    el.innerHTML = `<div class="lm-hero" style="height:260px">${L.orb(L.C.cal, 260, 'right:-70px;top:-80px')}</div>${L.top('atras')}<div class="lm-scroll"><div class="lm-pad lm-sinbarra" style="padding-top:calc(var(--st) + 110px)">
-      <h1 class="lm-t1" data-e>Frases que ayudan</h1><p class="lm-sub" data-e style="margin-bottom:16px">Léelas despacio. Quédate con la que hoy te sirva.</p>
-      ${propias.length ? `<h3 class="lm-sec" data-e style="margin-top:0">Las tuyas</h3>${propias.map((f, i) => `<div class="lm-card lm-frase" data-e style="margin-bottom:9px;display:flex;gap:10px;align-items:flex-start"><span style="flex:1">${L.esc(f)}</span><button class="tq tq-i" data-a="quitar" data-i="${i}" aria-label="Borrar" style="color:var(--coral);padding:4px">${L.ic('borrar', 18)}</button></div>`).join('')}<h3 class="lm-sec" data-e>Otras</h3>` : ''}
-      ${L.FRASES.map(f => `<div class="lm-card lm-frase" data-e style="margin-bottom:9px">${f}</div>`).join('')}
-      <button class="lm-btn lm-sec2 tq tq-g" data-a="nueva" data-e style="margin-top:14px">Añadir una frase tuya</button>
-      <button class="lm-btn tq tq-g" data-a="hecho" data-e style="margin-top:10px">Me han ayudado a parar</button>
+  let filtro = 'Todas';
+  const pintar = entrada => { const _sc = $('.lm-scroll', el)?.scrollTop || 0; queueMicrotask(() => { const s = $('.lm-scroll', el); if (s && _sc) s.scrollTop = _sc; });
+    const propias = L.d.frasesPropias || [], cats = Object.keys(L.FRASES_CAT);
+    const bloque = (t, l, mias) => `<h3 class="lm-sec" data-e>${t}</h3>${l.map((f, i) => `<div class="lm-card lm-frase" data-e style="margin-bottom:9px;${mias ? 'display:flex;gap:10px;align-items:flex-start' : ''}">${mias ? `<span style="flex:1">${L.esc(f)}</span><button class="tq tq-i" data-a="quitar" data-i="${i}" aria-label="Borrar" style="color:var(--coral);padding:4px">${L.ic('borrar', 18)}</button>` : f}</div>`).join('')}`;
+    el.innerHTML = `<div class="lm-hero" style="height:240px">${L.orb(L.C.cal, 240, 'right:-70px;top:-80px')}</div>${L.top('atras')}<div class="lm-scroll"><div class="lm-pad lm-sinbarra" style="padding-top:calc(var(--st) + 96px)">
+      <h1 class="lm-t1" data-e>Frases que ayudan</h1><p class="lm-sub" data-e>Léelas despacio. Quédate con la que hoy te sirva.</p>
+      <div class="lm-dos" data-e><button class="lm-btn lm-sec2 tq tq-g" data-a="nueva">Añadir una mía</button><button class="lm-btn tq tq-g" data-a="hecho">Me han ayudado</button></div>
+      <div class="lm-filtros" data-e>${['Todas', ...(propias.length ? ['Las mías'] : []), ...cats].map(c => `<button class="lm-chip tq tq-i ${c === filtro ? 'lm-si' : ''}" data-a="filtro" data-v="${L.esc(c)}">${L.esc(c)}</button>`).join('')}</div>
+      <div id="lm-fl">${(filtro === 'Todas' || filtro === 'Las mías') && propias.length ? bloque('Las tuyas', propias, true) : ''}
+      ${cats.filter(c => filtro === 'Todas' || filtro === c).map(c => bloque(c, L.FRASES_CAT[c])).join('')}</div>
     </div></div>`;
-    if (entrada) L.entrar(el, 200, 55);
+    if (entrada) L.entrar(el, 200, 45);
   };
   pintar(true);
   capa.acc = {
-    nueva: () => { const h = L.hoja(`<h2 data-e>Una frase tuya</h2><p class="lm-sub" data-e style="margin-bottom:14px">Algo que te diría alguien que te quiere, o que te dices tú en un buen día.</p><textarea class="lm-nota lm-gloock" id="lm-fr" data-e rows="3" maxlength="140"></textarea><button class="lm-btn tq tq-g" data-a="ok" data-e style="margin-top:16px">Añadir frase</button>`, { ok: (t, e, c) => { const v = $('#lm-fr', h.el).value.trim(); if (!v) return; L.d.frasesPropias = [v, ...(L.d.frasesPropias || [])]; L.guardar(); c(); pintar(false); } }); },
+    filtro: async t => { if (filtro === t.dataset.v) return; filtro = t.dataset.v; $$('.lm-filtros .lm-chip', el).forEach(c => c.classList.toggle('lm-si', c === t)); const z = $('#lm-fl', el); await L.anim(z, [{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: L.S }); pintar(false); L.entrar($('#lm-fl', el), 0, 35); },
+    nueva: () => { const h = L.hoja(`<h2 data-e>Una frase tuya</h2><p class="lm-sub" data-e style="margin-bottom:14px">Algo que te diría alguien que te quiere, o que te dices tú en un buen día.</p><textarea class="lm-nota lm-gloock" id="lm-fr" data-e rows="3" maxlength="140"></textarea><button class="lm-btn tq tq-g" data-a="ok" data-e style="margin-top:16px">Añadir frase</button>`, { ok: (t, e, c) => { const v = $('#lm-fr', h.el).value.trim(); if (!v) return; L.d.frasesPropias = [v, ...(L.d.frasesPropias || [])]; L.guardar(); c(); filtro = 'Todas'; pintar(false); } }); },
     quitar: t => { const i = +t.dataset.i, f = L.d.frasesPropias[i]; L.d.frasesPropias.splice(i, 1); L.guardar(); pintar(false); L.toast('Frase borrada', () => { L.d.frasesPropias.splice(i, 0, f); L.guardar(); pintar(false); }); },
     hecho: () => L.abrir('ayudo', o, 'fundido')
   };

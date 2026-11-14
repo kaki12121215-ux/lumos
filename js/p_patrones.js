@@ -1,4 +1,4 @@
-/* Lumos 1.1.0 · patrones y diario */
+/* Lumos 1.2.0 · patrones y diario */
 'use strict';
 L.estPat = { vista: 'Mes', mes: 0, anio: 0, q: '', dias: 45 };
 const COLOR_INF = { Descanso: L.C.cal, Amistades: L.C.ale, Ejercicio: L.C.ver, Pareja: L.C.ene, Familia: L.C.lil, 'Tiempo libre': L.C.baj, Salud: L.C.cal, Comida: L.C.ver, 'El tiempo': L.C.baj, Trabajo: L.C.ene, 'Dormir poco': L.C.ten };

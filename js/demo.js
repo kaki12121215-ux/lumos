@@ -1,4 +1,4 @@
-/* Lumos 1.1.0 · datos de prueba (botón temporal: se quitará cuando apruebes la app) */
+/* Lumos 1.2.0 · datos de prueba (botón temporal: se quitará cuando apruebes la app) */
 'use strict';
 L.cargarDemo = async () => {
   let semilla = 7;
@@ -123,12 +123,13 @@ L.cargarDemo = async () => {
   D.plan = {
     arriba: ['Duermo menos de 6 horas dos noches y no estoy cansado', 'Hablo más deprisa y empiezo muchas cosas', 'Gasto en cosas que no necesito'],
     abajo: ['Dejo de contestar mensajes', 'Me cuesta levantarme tres días seguidos', 'No me apetece ni lo que me gusta'],
+    mal: ['Redes sociales todo el rato', 'Acostarme tarde viendo series', 'Alcohol', 'Saltarme comidas'],
     hago: ['Aviso a Leo', 'Mantengo mi hora de acostarme', 'Pido cita con mi psiquiatra', 'Dejo las compras grandes para dentro de una semana'],
     avisar: true
   };
   D.palabrasPropias = [{ palabra: 'Revuelto', familia: 'tension', def: 'Como cuando todo se mezcla por dentro.' }, { palabra: 'Domingo', familia: 'calma', def: 'Esa calma lenta de domingo por la tarde.' }];
   D.frasesPropias = ['Mañana lo veré con otros ojos.'];
-  D.sintomasPropios = ['Música muy alta', 'Me cuesta concentrarme'];
+  D.sintomasPropios = ['Canto solo por la calle', 'Ordeno la casa de madrugada'];
   D.carta = { ts: L.mas(hoy, -20).getTime(), texto: 'Hola. Si estás leyendo esto, hoy cuesta, y está bien que cueste.\n\nAcuérdate de que en agosto también pasó y salió. No tienes que arreglarlo todo hoy: levántate, come algo y escribe a Leo.\n\nUn abrazo de ti mismo, un día tranquilo.' };
   D.medicacion = [{ id: 'md1', nombre: 'Medicación A', dosis: '150 mg', cuando: 'Noche' }];
   D.hitos = [{ id: 'h1', fecha: fecha(40), texto: 'Viaje a Valencia', tipo: 'vida' }, { id: 'h2', fecha: fecha(72), texto: 'Medicación A: 100 mg → 150 mg', tipo: 'medicacion' }, { id: 'h3', fecha: fecha(96), texto: 'Semana de exámenes', tipo: 'vida' }];
