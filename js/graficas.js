@@ -1,4 +1,4 @@
-/* Lumos 1.2.0 · gráfica del ánimo y cálculos */
+/* Lumos 1.3.1 · gráfica del ánimo y cálculos */
 'use strict';
 L.spline = pts => {
   if (pts.length < 2) return '';
@@ -21,8 +21,7 @@ L.grafica = ({ vals, sueno, med, etiquetas, W = 346, HP = 260, r = 5, gid = 'g',
   for (const v of [2, 1, 0, -1, -2]) {
     const N = L.NIV[v];
     o.push(`<rect x="0" y="${((2 - v) * bh + 2).toFixed(1)}" width="${W}" height="${(bh - 4).toFixed(1)}" rx="12" fill="${N.c}" fill-opacity="${v === 0 ? (osc ? .3 : .26) : (osc ? .15 : .13)}"/>`);
-    o.push(`<text x="10" y="${(y(v) + (N.clinico ? -1 : 4)).toFixed(1)}" font-size="11.5" fill="${L.textoDe(N.c)}" font-family="Work" font-weight="${v === 0 ? 700 : 400}">${N.nombre}</text>`);
-    if (N.clinico) o.push(`<text x="10" y="${(y(v) + 11).toFixed(1)}" font-size="8.5" fill="${L.textoDe(N.c)}" fill-opacity=".7" font-family="Work">${N.clinico.toLowerCase()}</text>`);
+    o.push(`<text x="10" y="${(y(v) + 4).toFixed(1)}" font-size="11.5" fill="${L.textoDe(N.c)}" font-family="Work" font-weight="${v === 0 ? 700 : 400}">${N.nombre}</text>`);
   }
   /* tramos continuos (los huecos cortan la curva) */
   const tramos = []; let t = [];

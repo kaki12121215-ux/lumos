@@ -1,4 +1,4 @@
-/* Lumos 1.2.0 · pantallas nuevas: señales tempranas, lo aprendido, mirar atrás, lo que sí he hecho,
+/* Lumos 1.3.1 · pantallas nuevas: señales tempranas, lo aprendido, mirar atrás, lo que sí he hecho,
    carta, atajos y Salud, hitos, medicación, tu mes, vaciar la cabeza, lo bueno de la semana… */
 'use strict';
 const colorFase = t => t === 'arriba' ? L.C.ene : L.C.baj;
@@ -356,7 +356,7 @@ L.pantallas.misSintomas = (el, o, capa) => {
       ${L.d.sintomasPropios.length ? L.d.sintomasPropios.map((s, i) => `<div class="lm-li lm-card" data-e><span style="color:var(--mu)">${L.ic('ok', 18)}</span><div><b>${L.esc(s)}</b></div><button class="tq tq-i" data-a="quitar" data-i="${i}" aria-label="Borrar" style="color:var(--coral);padding:8px">${L.ic('borrar', 19)}</button></div>`).join('') : '<p class="lm-nota-p" data-e>Aún no has añadido ninguno.</p>'}
       <button class="lm-btn lm-sec2 tq tq-g" data-a="anadir" data-e style="margin-top:12px">Añadir un síntoma</button>
       <h3 class="lm-sec" data-e>Los de Lumos</h3><p class="lm-nota-p" data-e style="margin-top:-4px">Al completar el día te salen primero los del nivel que eliges.</p>
-      ${[2, 1, 0, -1, -2].map(n => `<p class="lm-campo-n" data-e style="margin:14px 0 8px;font-size:13px;color:var(--mu)">${L.nivelConClinico(n)}</p><div data-e>${L.chips(L.SINT_NIV[n], [], 'x')}</div>`).join('')}
+      ${[2, 1, 0, -1, -2].map(n => `<p class="lm-campo-n" data-e style="margin:14px 0 8px;font-size:13px;color:var(--mu)">${L.NIV[n].nombre}</p><div data-e>${L.chips(L.SINT_NIV[n], [], 'x')}</div>`).join('')}
     </div></div>`;
     if (entrada) L.entrar(el, 200, 55);
   };

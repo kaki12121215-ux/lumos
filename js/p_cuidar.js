@@ -1,4 +1,4 @@
-/* Lumos 1.3.0 · ayuda, plan, informe y ajustes */
+/* Lumos 1.3.1 · ayuda, plan, informe y ajustes */
 'use strict';
 
 /* ============================== SI LO ESTÁS PASANDO MUY MAL ============================== */
@@ -111,7 +111,7 @@ L.imprimirInforme = () => {
     const n = new Date(mm.getFullYear(), mm.getMonth() + 1, 0).getDate(), x0 = M + 70, bw = (W - 70) / 31;
     for (let d = 1; d <= n; d++) { const a = D.m[L.iso(new Date(mm.getFullYear(), mm.getMonth(), d))]; const h = a ? [5, 9, 13, 17, 21][a.nivel + 2] : 1.5; P.r(x0 + (d - 1) * bw, P.y, bw - 1.4, h, a ? L.NIV[a.nivel].c : '#DDD6CB'); }
   });
-  P.y -= 16; let lx = M; [2, 1, 0, -1, -2].forEach(n => { P.r(lx, P.y, 7, 7, L.NIV[n].c); const tx = L.nivelConClinico(n); P.t(lx + 10, P.y + .5, tx, 8, false, '#6E635A'); lx += P.ancho(tx, 8) + 22; });
+  P.y -= 16; let lx = M; [2, 1, 0, -1, -2].forEach(n => { P.r(lx, P.y, 7, 7, L.NIV[n].c); const tx = L.NIV[n].nombre; P.t(lx + 10, P.y + .5, tx, 8, false, '#6E635A'); lx += P.ancho(tx, 8) + 22; });
   P.titulo('Cifras');
   P.parrafo(`Días apuntados: ${D.reg.length} de 90. Estable: ${D.estable ?? '—'} % de los días. Sueño medio: ${D.sueno == null ? '—' : L.num(D.sueno) + ' h'}. Periodos por arriba: ${D.periodos}. Periodos por abajo: ${D.periodosAbajo}. Días sin medicación: ${D.sinMed}. Días mixtos: ${D.mixtos}.`, 10);
   if (D.fases.length) {

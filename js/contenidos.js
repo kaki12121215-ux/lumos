@@ -1,14 +1,13 @@
-/* Lumos 1.2.0 · contenidos: niveles, síntomas, recursos, trampas, frases y plan */
+/* Lumos 1.3.1 · contenidos: niveles, síntomas, recursos, trampas, frases y plan */
 'use strict';
 /* ============================== ESCALA DEL ÁNIMO ============================== */
 L.NIV = {
-  2: { nombre: 'Muy arriba', clinico: 'Manía', c: L.C.ten, signo: '+2', exp: 'Ánimo muy alto o muy irritable, casi sin dormir, decisiones arriesgadas.' },
-  1: { nombre: 'Arriba', clinico: 'Hipomanía', c: L.C.ene, signo: '+1', exp: 'Más energía e ideas de lo habitual, menos sueño, más hablador o irritable.' },
-  0: { nombre: 'Estable', clinico: '', c: L.C.cal, signo: '0', exp: 'Ánimo estable, ni acelerado ni hundido: tu día normal.' },
-  '-1': { nombre: 'Abajo', clinico: 'Hipotimia', c: L.C.baj, signo: '−1', exp: 'Ánimo bajo, menos ganas y energía, pero sigues con tu día.' },
-  '-2': { nombre: 'Muy abajo', clinico: 'Depresión', c: L.C.ind, signo: '−2', exp: 'Ánimo muy bajo casi todo el día, sin interés; cuesta hacer lo básico.' }
+  2: { nombre: 'Muy arriba', c: L.C.ten, signo: '+2', exp: 'Ánimo muy alto o muy irritable, casi sin dormir, decisiones arriesgadas.' },
+  1: { nombre: 'Arriba', c: L.C.ene, signo: '+1', exp: 'Más energía e ideas de lo habitual, menos sueño, más hablador o irritable.' },
+  0: { nombre: 'Estable', c: L.C.cal, signo: '0', exp: 'Ánimo estable, ni acelerado ni hundido: tu día normal.' },
+  '-1': { nombre: 'Abajo', c: L.C.baj, signo: '−1', exp: 'Ánimo bajo, menos ganas y energía, pero sigues con tu día.' },
+  '-2': { nombre: 'Muy abajo', c: L.C.ind, signo: '−2', exp: 'Ánimo muy bajo casi todo el día, sin interés; cuesta hacer lo básico.' }
 };
-L.nivelConClinico = n => L.NIV[n].nombre + (L.NIV[n].clinico ? ` (${L.NIV[n].clinico.toLowerCase()})` : '');
 /* síntomas propuestos para cada nivel */
 L.SINT_NIV = {
   2: ['Casi no duermo y no me canso', 'Pensamiento rápido', 'Hablo sin parar', 'Me siento invencible', 'Gasto de más', 'Decisiones arriesgadas', 'Irritable', 'No puedo estarme quieto', 'Empiezo mil cosas a la vez', 'Me distraigo con todo', 'Mucha energía', 'Siento que tengo una misión especial', 'Más deseo sexual', 'Conduzco o hago cosas peligrosas', 'Otros me dicen que estoy raro'],

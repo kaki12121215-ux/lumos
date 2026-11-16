@@ -1,4 +1,4 @@
-/* Lumos 1.2.0 · escala del ánimo */
+/* Lumos 1.3.1 · escala del ánimo */
 'use strict';
 L.estAnimo = { rango: 'Semana', off: 0 };
 const signo = n => L.NIV[n].signo;
@@ -29,7 +29,7 @@ L.vistas.animo = (el, { primera }) => {
     <div data-e style="margin-top:20px">${L.li(L.pt(L.C.ene, 36), 'Tus señales tempranas', nA + nB ? `Aprendidas de ${nA} ${nA === 1 ? 'subida' : 'subidas'} y ${nB} ${nB === 1 ? 'bajada' : 'bajadas'}` : 'Lo que suele pasar antes de una subida o una bajada', 'data-a="senales"')}</div>
     <div data-e>${L.li(L.pt(L.C.lil, 36), 'Lo que he aprendido', 'Cada fase, cómo empezó y qué te ayudó', 'data-a="aprendido"')}</div>
     <div data-e>${L.li(`<span style="color:var(--mu)">${L.ic('calendario')}</span>`, 'Hitos', 'Cambios de medicación, viajes… en la gráfica', 'data-a="hitos"')}</div>
-    <div data-e>${L.li(`<span style="color:var(--mu)">${L.ic('info')}</span>`, 'Qué significa cada nivel', 'Manía, hipomanía, estable, hipotimia y depresión', 'data-a="sig"')}</div>
+    <div data-e>${L.li(`<span style="color:var(--mu)">${L.ic('info')}</span>`, 'Qué significa cada nivel', 'De muy arriba a muy abajo', 'data-a="sig"')}</div>
     <p class="lm-nota-p" data-e style="margin-top:6px">${L.AVISO_ESCALA}</p>
   </div>`;
   L.mancha($('[data-seg]', el), true);
@@ -113,7 +113,7 @@ L.pantallas.nivel = (el, o, capa) => {
   const esHoy = fecha === L.hoy();
   el.innerHTML = `${L.top('x', L.fechaLarga(L.deIso(fecha)))}<div class="lm-scroll"><div class="lm-pad lm-contop">
     <h1 class="lm-t1" data-e>¿Cómo ha sido tu ánimo ${esHoy ? 'hoy' : 'ese día'}?</h1><p class="lm-sub" data-e style="margin-bottom:14px">Mira el día entero, no un momento.</p>
-    ${[2, 1, 0, -1, -2].map(n => `<button class="lm-nv tq tq-g ${sel === n ? 'lm-on' : ''}" data-a="n" data-v="${n}" data-e style="width:100%;text-align:left;${sel === n ? `border-color:${L.NIV[n].c}` : ''}">${L.orb(L.NIV[n].c, sel === n ? 86 : 44, sel === n ? 'margin:-14px -8px -14px -14px' : 'margin:0 0 0 -2px')}<div><b>${L.NIV[n].nombre}${L.NIV[n].clinico ? ` <span style="font-family:Work;font-size:12.5px;color:var(--mu)">${L.NIV[n].clinico.toLowerCase()}</span>` : ''}</b><small>${L.NIV[n].exp}</small></div><span class="lm-ng">${signo(n)}</span></button>`).join('')}
+    ${[2, 1, 0, -1, -2].map(n => `<button class="lm-nv tq tq-g ${sel === n ? 'lm-on' : ''}" data-a="n" data-v="${n}" data-e style="width:100%;text-align:left;${sel === n ? `border-color:${L.NIV[n].c}` : ''}">${L.orb(L.NIV[n].c, sel === n ? 86 : 44, sel === n ? 'margin:-14px -8px -14px -14px' : 'margin:0 0 0 -2px')}<div><b>${L.NIV[n].nombre}</b><small>${L.NIV[n].exp}</small></div><span class="lm-ng">${signo(n)}</span></button>`).join('')}
     <p class="lm-nota-p" data-e style="margin-top:10px">${L.AVISO_ESCALA}</p>
   </div></div><div class="lm-abajo"><button class="lm-btn tq tq-g ${sel == null ? 'lm-off' : ''}" data-a="seguir">Seguir</button></div>`;
   L.entrar(el, 280, 55);
@@ -180,7 +180,7 @@ L.pantallas.completar = (el, o, capa) => {
 L.pantallas.significado = (el, o, capa) => {
   el.innerHTML = `${L.top('atras')}<div class="lm-scroll"><div class="lm-pad lm-contop lm-sinbarra">
     <h1 class="lm-t1" data-e style="margin-bottom:14px">Qué significa cada nivel</h1>
-    ${[2, 1, 0, -1, -2].map(n => `<div class="lm-gl" data-e>${L.orb(L.NIV[n].c, 76, 'margin:-12px -6px -12px -12px')}<div><b>${L.NIV[n].nombre} <span style="font-family:Work;font-size:14px;color:var(--mu)">${signo(n)}${L.NIV[n].clinico ? ', ' + L.NIV[n].clinico.toLowerCase() : ''}</span></b><small>${L.NIV[n].exp}</small></div></div>`).join('')}
+    ${[2, 1, 0, -1, -2].map(n => `<div class="lm-gl" data-e>${L.orb(L.NIV[n].c, 76, 'margin:-12px -6px -12px -12px')}<div><b>${L.NIV[n].nombre} <span style="font-family:Work;font-size:14px;color:var(--mu)">${signo(n)}</span></b><small>${L.NIV[n].exp}</small></div></div>`).join('')}
     <p class="lm-sub" data-e style="margin-top:12px;font-size:14px">${L.AVISO_ESCALA}</p>
     <p class="lm-nota-p" data-e style="margin-top:10px">Cada día apuntas también las horas de sueño, si has tomado la medicación, si ha sido un día mixto y los síntomas que notes. Lumos te avisa con calma si ve tres días seguidos por arriba con el sueño bajando, tres días por abajo o dos días sin medicación.</p>
   </div></div>`;
