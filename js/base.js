@@ -1,7 +1,7 @@
 /* Lumos 1.4.0 · base: datos, fechas, colores, iconos, capas y animaciones */
 'use strict';
 const L = window.L = {};
-L.VERSION = '1.4.1';
+L.VERSION = '1.4.2';
 L.rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change', e => { L.rm = e.matches; });
 
