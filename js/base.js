@@ -1,7 +1,7 @@
-/* Lumos 1.4.0 · base: datos, fechas, colores, iconos, capas y animaciones */
+/* Lumos 1.3.0 · base: datos, fechas, colores, iconos, capas y animaciones */
 'use strict';
 const L = window.L = {};
-L.VERSION = '1.4.3';
+L.VERSION = '1.3.2';
 L.rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change', e => { L.rm = e.matches; });
 
@@ -317,9 +317,9 @@ L.hoja = (html, acc = {}, alCerrar) => {
   capa.addEventListener('click', e => { const t = e.target.closest('[data-a]'); if (!t) return; if (t.dataset.a === 'cerrar') return cerrar(); acc[t.dataset.a]?.(t, e, cerrar); });
   /* arrastrar el asa hacia abajo */
   let y0 = null, dy = 0;
-  if (L.rm) hoja.addEventListener('touchstart', e => { if (hoja.scrollTop > 0) return; y0 = e.touches[0].clientY; dy = 0; }, { passive: true });
-  if (L.rm) hoja.addEventListener('touchmove', e => { if (y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); if (dy > 4) { hoja.style.transition = 'none'; hoja.style.translate = `0 ${dy}px`; } }, { passive: true });
-  if (L.rm) hoja.addEventListener('touchend', () => { if (y0 === null) return; y0 = null; hoja.style.transition = ''; if (dy > 110) { hoja.style.translate = ''; cerrar(); } else hoja.style.translate = ''; });
+  hoja.addEventListener('touchstart', e => { if (hoja.scrollTop > 0) return; y0 = e.touches[0].clientY; dy = 0; }, { passive: true });
+  hoja.addEventListener('touchmove', e => { if (y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); if (dy > 4) { hoja.style.transition = 'none'; hoja.style.translate = `0 ${dy}px`; } }, { passive: true });
+  hoja.addEventListener('touchend', () => { if (y0 === null) return; y0 = null; hoja.style.transition = ''; if (dy > 110) { hoja.style.translate = ''; cerrar(); } else hoja.style.translate = ''; });
   return { el: hoja, cerrar };
 };
 L.confirmar = (titulo, texto, boton, fn, coral = true) => L.hoja(`<h2 data-e>${esc(titulo)}</h2><p class="lm-sub" data-e style="margin-bottom:22px">${esc(texto)}</p>

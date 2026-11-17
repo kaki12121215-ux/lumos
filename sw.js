@@ -1,10 +1,10 @@
 /* Lumos · service worker. Cada versión cambia el nombre de la caché para que el móvil se actualice solo. */
-const CACHE = 'lumos-1.4.3';
+const CACHE = 'lumos-1.3.2';
 const ARCHIVOS = [
-  './', './index.html', './manifest.webmanifest', './css/lumos.css?v=1.4.3',
-  './js/base.js?v=1.4.3', './js/palabras.js?v=1.4.3', './js/contenidos.js?v=1.4.3', './js/pdf.js?v=1.4.3', './js/graficas.js?v=1.4.3', './js/senales.js?v=1.4.3', './js/app.js?v=1.4.3',
-  './js/intro.js?v=1.4.3', './js/cristal.js?v=1.4.3', './js/p_inicio.js?v=1.4.3', './js/p_hoy.js?v=1.4.3', './js/p_animo.js?v=1.4.3', './js/p_recursos.js?v=1.4.3',
-  './js/p_patrones.js?v=1.4.3', './js/p_cuidar.js?v=1.4.3', './js/p_nuevas.js?v=1.4.3', './js/demo.js?v=1.4.3',
+  './', './index.html', './manifest.webmanifest', './css/lumos.css?v=1.3.2',
+  './js/base.js?v=1.3.2', './js/palabras.js?v=1.3.2', './js/contenidos.js?v=1.3.2', './js/pdf.js?v=1.3.2', './js/graficas.js?v=1.3.2', './js/senales.js?v=1.3.2', './js/app.js?v=1.3.2',
+  './js/intro.js?v=1.3.2', './js/p_inicio.js?v=1.3.2', './js/p_hoy.js?v=1.3.2', './js/p_animo.js?v=1.3.2', './js/p_recursos.js?v=1.3.2',
+  './js/p_patrones.js?v=1.3.2', './js/p_cuidar.js?v=1.3.2', './js/p_nuevas.js?v=1.3.2', './js/demo.js?v=1.3.2',
   './fuentes/Gloock-Regular.ttf', './fuentes/WorkSans-Regular.ttf', './fuentes/WorkSans-Bold.ttf',
   './iconos/icono-180.png', './iconos/icono-192.png', './iconos/icono-512.png', './iconos/icono-512-maskable.png'
 ];
