@@ -1,4 +1,4 @@
-/* Lumos 1.3.0 · arranque, pestañas y tema */
+/* Lumos 1.4.0 · arranque, pestañas y tema */
 'use strict';
 L.TABS = [['hoy', 'Hoy'], ['animo', 'Ánimo'], ['recursos', 'Recursos'], ['patrones', 'Patrones']];
 L.vistas = {};      /* render de cada pestaña: (el, {primera}) => acciones */
@@ -103,6 +103,7 @@ L.abrirDestino = () => {
 L.iniciar = async () => {
   L.cargar(); L.leerURL(); L.aplicarTema();
   const app = $('#lm-app');
+  L.cristal?.();
   const p = L.d.perfil;
   if (!p) { L.montarBienvenida(); }
   else if (p.codigo) { L.montarRaiz(); L.barra(false); L.abrir('codigo', { modo: 'entrar' }, 'fundido'); }

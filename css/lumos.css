@@ -340,6 +340,47 @@ html[data-tema="oscuro"] .lm-cta::after{content:"";position:absolute;inset:0;bac
 .lm-cta p,.lm-cta .lm-mas{z-index:1}
 html[data-tema="oscuro"] .lm-ms{color:var(--mu2)}
 
+/* ==================== 1.4.0 · cristal líquido ==================== */
+.lm-barra{background:color-mix(in srgb,var(--card) 58%,transparent)!important;-webkit-backdrop-filter:blur(16px) saturate(1.7);backdrop-filter:blur(16px) saturate(1.7);
+  border:0!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.75),inset 0 0 0 1px rgba(255,255,255,.35),inset 0 -1px 1px rgba(0,0,0,.05),0 14px 34px -16px var(--sombra)!important}
+html[data-tema="oscuro"] .lm-barra{box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 0 1px rgba(255,255,255,.08),0 14px 34px -16px rgba(0,0,0,.6)!important}
+.lm-cr-lens{position:absolute;pointer-events:none;z-index:6;border-radius:999px;will-change:transform}
+.lm-cr-stage{position:absolute;inset:0;border-radius:inherit;overflow:hidden;background:var(--card)}
+.lm-cr-copy{position:absolute;pointer-events:none}
+.lm-cr-copy .lm-mancha{display:none}
+.lm-cr-rim{position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.34),rgba(255,255,255,.04) 46%,rgba(255,255,255,0) 60%,rgba(255,255,255,.10));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.55),inset 0 1.5px 1px rgba(255,255,255,.95),inset 0 -1.5px 2px rgba(255,255,255,.35),
+    inset 3px 0 4px -2px rgba(255,90,120,.28),inset -3px 0 4px -2px rgba(70,140,255,.30),0 10px 22px -8px rgba(0,0,0,.28),0 1px 3px rgba(0,0,0,.12)}
+html[data-tema="oscuro"] .lm-cr-rim{background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.02) 50%,rgba(255,255,255,.06));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.28),inset 0 1.5px 1px rgba(255,255,255,.55),inset 3px 0 4px -2px rgba(255,90,120,.3),inset -3px 0 4px -2px rgba(70,140,255,.32),0 10px 22px -8px rgba(0,0,0,.6)}
+.lm-cr-tint{position:absolute;inset:0;border-radius:inherit;background:rgba(255,255,255,.10)}
+.lm-sw i{transition:translate .34s var(--muelle),width .2s,background-color .25s,box-shadow .25s}
+.lm-sw i.lm-cr-up{background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),inset 0 1.5px 1px rgba(255,255,255,1),inset 2px 0 3px -1px rgba(255,90,120,.35),inset -2px 0 3px -1px rgba(70,140,255,.38),0 6px 14px -4px rgba(0,0,0,.3)}
+.lm-top .lm-rb:not(.lm-vacio),.lm-top-campo .lm-rb{background:color-mix(in srgb,var(--card) 34%,transparent)!important;border:0!important;
+  -webkit-backdrop-filter:blur(12px) saturate(1.9);backdrop-filter:blur(12px) saturate(1.9);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.55),inset 0 1.5px 1px rgba(255,255,255,.9),inset 0 -1px 2px rgba(255,255,255,.25),inset 2px 0 3px -1px rgba(255,90,120,.22),inset -2px 0 3px -1px rgba(70,140,255,.24),0 8px 18px -8px rgba(0,0,0,.25)!important}
+html[data-tema="oscuro"] .lm-top .lm-rb:not(.lm-vacio),html[data-tema="oscuro"] .lm-top-campo .lm-rb{box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),inset 0 1.5px 1px rgba(255,255,255,.45),0 8px 18px -8px rgba(0,0,0,.6)!important}
+.lm-cta .lm-mas,[data-a="apuntar"] .lm-mas{background:color-mix(in srgb,var(--boton) 74%,transparent)!important;-webkit-backdrop-filter:blur(10px) saturate(1.6);backdrop-filter:blur(10px) saturate(1.6);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.28),inset 0 1.5px 1px rgba(255,255,255,.55),inset 0 -2px 3px rgba(255,255,255,.12),inset 2px 0 3px -1px rgba(255,90,120,.3),inset -2px 0 3px -1px rgba(70,140,255,.32),0 10px 22px -8px rgba(0,0,0,.4)}
+.lm-hoja{background:color-mix(in srgb,var(--bg) 76%,transparent)!important;-webkit-backdrop-filter:blur(26px) saturate(1.8);backdrop-filter:blur(26px) saturate(1.8);border-radius:34px 34px 0 0!important;
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.85),inset 0 0 0 1px rgba(255,255,255,.35),0 -10px 40px -12px rgba(0,0,0,.25)}
+html[data-tema="oscuro"] .lm-hoja{box-shadow:inset 0 1.5px 0 rgba(255,255,255,.2),inset 0 0 0 1px rgba(255,255,255,.08)}
+.lm-cr-flens{position:fixed;pointer-events:none;z-index:200;border-radius:999px;will-change:transform}
+.lm-cr-flens .lm-cr-stage{position:absolute;inset:0;border-radius:inherit;overflow:hidden}
+.lm-cr-slider{position:relative;height:44px;margin:14px 4px 4px;touch-action:none}
+.lm-cr-track{position:absolute;left:0;right:0;top:19px;height:6px;border-radius:3px;background:var(--lin2)}
+.lm-cr-fill{position:absolute;left:0;top:19px;height:6px;border-radius:3px;background:linear-gradient(90deg,#8AB6E8,#86BFA9 60%,#F2CB6B)}
+.lm-cr-ticks{position:absolute;left:0;right:0;top:32px;display:flex;justify-content:space-between;font-size:11px;color:var(--mu2)}
+.lm-cr-knob{position:absolute;top:8px;width:40px;height:28px;margin-left:-20px;border-radius:999px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 .5px rgba(0,0,0,.06);overflow:hidden}
+.lm-cr-knob .lm-cr-stage{position:absolute;inset:0;border-radius:inherit;overflow:hidden;opacity:0}
+.lm-cr-knob .lm-cr-rim{opacity:0}
+.lm-barra{touch-action:none}
+.lm-seg{touch-action:pan-y}
+.lm-nv{touch-action:none}
+.lm-asa{touch-action:none}
+@media (prefers-reduced-motion:reduce){.lm-cr-lens,.lm-cr-flens{display:none}}
+
 /* ==================== 1.3.0 · cabecera y animación al abrir ==================== */
 .lm-cab{display:flex;align-items:center;height:44px;margin-bottom:12px}
 .lm-cab .lm-rb{margin-left:auto}
