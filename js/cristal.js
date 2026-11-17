@@ -1,6 +1,7 @@
-/* Lumos 1.4.0 · cristal líquido
+/* Lumos 1.4.1 · cristal líquido
    Barra de pestañas, selectores, interruptores, escala del ánimo y deslizador de sueño con una lente
-   de cristal que se arrastra; botones redondos y hojas de cristal que se hinchan, se inclinan y
+   de cristal transparente que se arrastra (sin copias del contenido, para que en Safari se vea siempre
+   lo de verdad); botones redondos y hojas de cristal que se hinchan, se inclinan y
    vuelven con muelle. Versión propia en JavaScript, a partir de la técnica de
    @zakisheriff/liquid-glass (licencia MIT, Copyright (c) 2026 Zaki Sheriff).
    Con «Reducir movimiento» se queda el aspecto de cristal sin lentes ni temblores. */
@@ -27,46 +28,19 @@ const muelle = (v, cfg, on) => {
 const SIGUE = desde(.2, .82), TEMBLOR = desde(.32, .3), SUBE = desde(.26, .62), BAJA = desde(.34, .9), HINCHA = desde(.3, .45), HOJA = desde(.42, .62);
 const RIM = '<div class="lm-cr-tint"></div><div class="lm-cr-rim"></div>';
 
-/* ---------- mapa de refracción (bisel curvo, ley de Snell aproximada) ---------- */
-const mapas = new Map();
-const mapa = (w, h, r, bis) => {
-  const key = [w, h, r, bis].join('x'); if (mapas.has(key)) return mapas.get(key);
-  const cv = D.createElement('canvas'); cv.width = w; cv.height = h; const g = cv.getContext('2d'), im = g.createImageData(w, h);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const cx = Math.min(Math.max(x + .5, r), w - r), cy = Math.min(Math.max(y + .5, r), h - r);
-    let dx = x + .5 - cx, dy = y + .5 - cy; const dc = Math.hypot(dx, dy); const d = r - dc;
-    let nx = 0, ny = 0, m = 0;
-    if (d < bis && dc > 0) { nx = -dx / dc; ny = -dy / dc; const u = 1 - Math.max(d, 0) / bis; m = u * u * (3 - 2 * u); }
-    const i = (y * w + x) * 4; im.data[i] = 128 + nx * m * 127; im.data[i + 1] = 128 + ny * m * 127; im.data[i + 2] = 128; im.data[i + 3] = 255;
-  }
-  g.putImageData(im, 0, 0);
-  const id = 'lm-cristal-' + mapas.size;
-  const svg = D.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('width', 0); svg.setAttribute('height', 0); svg.style.position = 'absolute'; svg.setAttribute('aria-hidden', 'true');
-  svg.innerHTML = `<filter id="${id}" x="0" y="0" width="${w}" height="${h}" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-    <feImage href="${cv.toDataURL()}" x="0" y="0" width="${w}" height="${h}" result="m" preserveAspectRatio="none"/>
-    <feDisplacementMap in="SourceGraphic" in2="m" scale="${-bis * 1.25}" xChannelSelector="R" yChannelSelector="G" result="d"/>
-    <feGaussianBlur in="d" stdDeviation=".25"/></filter>`;
-  D.body.appendChild(svg); mapas.set(key, id); return id;
-};
-
 /* ---------- lente arrastrable sobre una fila de opciones ---------- */
 const pista = (cont, sel, opt) => {
   let lente = null, gesto = null, sup = false, deja = false;
   const items = () => [...cont.querySelectorAll(sel)];
   const cx = el => el.offsetLeft + el.offsetWidth / 2;
-  const S = { x: 0, lift: 0, sx: 1, swell: 0 };
+  const S = { x: 0, lift: 0, sx: 1, swell: 0, w: 0 };
   let W = 0, H = 0, top = 0;
-  let vivoHasta = 0;
-  const recopiar = () => { const n = cont.cloneNode(true); n.querySelectorAll('.lm-cr-lens').forEach(x => x.remove()); lente.copy.innerHTML = n.innerHTML; };
   const pinta = () => {
     if (!lente) return;
-    if (performance.now() < vivoHasta) recopiar();
-    const s = .82 + .18 * S.lift, sx = S.sx, sy = 1 / Math.sqrt(sx);
-    lente.el.style.transform = `translate(${S.x - W / 2}px,${top}px) scale(${s * sx},${s * sy})`;
-    lente.glass.style.opacity = Math.min(1, S.lift * 1.4);
-    const z = 1 + opt.zoom * S.lift, ox = S.x;
-    lente.copy.style.transformOrigin = '0 0';
-    lente.copy.style.transform = `translate(${W / 2}px,${H / 2}px) scale(${z}) translate(${-ox}px,${-(top + H / 2)}px)`;
+    const s = .9 + .1 * S.lift, sx = S.sx, sy = 1 / Math.sqrt(sx), w = Math.max(H * 1.1, S.w);
+    lente.el.style.width = w + 'px';
+    lente.el.style.transform = `translate(${S.x - w / 2}px,${top}px) scale(${s * sx},${s * sy})`;
+    lente.el.style.opacity = Math.min(1, S.lift * 1.5);
     const m = cont.querySelector(':scope > .lm-mancha'); if (m) m.style.opacity = Math.max(0, 1 - S.lift * 1.6);
     cont.style.scale = opt.swell ? `${1 + S.swell * opt.swell} ${1 + S.swell * opt.swell * .6}` : '';
   };
@@ -74,16 +48,13 @@ const pista = (cont, sel, opt) => {
   const ml = muelle(0, SUBE, v => { S.lift = v; pinta(); });
   const ms = muelle(1, TEMBLOR, v => { S.sx = v; pinta(); });
   const mw = muelle(0, HINCHA, v => { S.swell = v; pinta(); });
+  const mW = muelle(0, SIGUE, v => { S.w = v; pinta(); });
+  const anchoDe = it => it.offsetWidth + opt.spread;
   const crear = it => {
-    H = Math.round(it.offsetHeight + opt.over * 2); W = Math.round(Math.max(it.offsetWidth + opt.spread, H * 1.15)); top = it.offsetTop - opt.over;
-    const el = D.createElement('div'); el.className = 'lm-cr-lens'; el.style.width = W + 'px'; el.style.height = H + 'px'; el.style.left = '0px'; el.style.top = '0px'; el.style.transformOrigin = '50% 50%';
-    const stage = D.createElement('div'); stage.className = 'lm-cr-stage'; const fondo = cont.classList.contains('lm-barra') ? 'var(--card)' : getComputedStyle(cont).backgroundColor; stage.style.background = fondo; stage.style.filter = `url(#${mapa(W, H, H / 2, Math.min(14, H * .3))})`;
-    const copy = cont.cloneNode(true); copy.className = cont.className + ' lm-cr-copy'; copy.removeAttribute('style');
-    Object.assign(copy.style, { position: 'absolute', left: '0px', top: '0px', width: cont.offsetWidth + 'px', height: cont.offsetHeight + 'px', margin: 0, translate: 'none', background: fondo, boxShadow: 'none', backdropFilter: 'none' });
-    copy.querySelectorAll('.lm-cr-lens').forEach(n => n.remove());
-    const glass = D.createElement('div'); glass.innerHTML = '<div class="lm-cr-tint"></div><div class="lm-cr-rim"></div>'; glass.style.cssText = 'position:absolute;inset:0;border-radius:inherit';
-    stage.appendChild(copy); el.append(stage, glass); cont.appendChild(el);
-    lente = { el, copy, glass };
+    H = Math.round(it.offsetHeight + opt.over * 2); top = it.offsetTop - opt.over;
+    const el = D.createElement('div'); el.className = 'lm-cr-lens'; el.style.height = H + 'px'; el.style.left = '0px'; el.style.top = '0px'; el.style.transformOrigin = '50% 50%';
+    el.innerHTML = '<div class="lm-cr-tint"></div><div class="lm-cr-rim"></div>'; cont.appendChild(el);
+    lente = { el }; mW.set(anchoDe(it), true);
   };
   const quitar = () => { lente?.el.remove(); lente = null; const m = cont.querySelector(':scope > .lm-mancha'); if (m) m.style.opacity = ''; cont.style.scale = ''; };
   const masCerca = x => { let b = null, d = 1e9; items().forEach(i => { const dd = Math.abs(cx(i) - x); if (dd < d) { d = dd; b = i; } }); return b; };
@@ -96,7 +67,7 @@ const pista = (cont, sel, opt) => {
     gesto = { id: e.pointerId, x0: xLocal(e), a: S.x, lx: xLocal(e), t: performance.now(), movido: false, desde: on, item: it };
     cont.setPointerCapture?.(e.pointerId);
     ml.tune(SUBE); ml.set(1); mw.set(1);
-    if (it !== on) { mx.tune(SIGUE); mx.set(cx(it)); }
+    if (it !== on) { mx.tune(SIGUE); mx.set(cx(it)); mW.set(anchoDe(it)); }
   }, true);
   cont.addEventListener('pointermove', e => {
     if (!gesto || e.pointerId !== gesto.id) return;
@@ -104,7 +75,7 @@ const pista = (cont, sel, opt) => {
     if (Math.abs(x - gesto.x0) > 4) gesto.movido = true;
     const minX = cx(items()[0]), maxX = cx(items().at(-1));
     let tx = gesto.a + (x - gesto.x0); if (tx < minX) tx = minX - Math.sqrt(minX - tx) * 3; if (tx > maxX) tx = maxX + Math.sqrt(tx - maxX) * 3;
-    mx.tune(SIGUE); mx.set(tx);
+    mx.tune(SIGUE); mx.set(tx); mW.set(anchoDe(masCerca(tx)));
     ms.tune(TEMBLOR); ms.set(1 + Math.min(.22, Math.abs(v) / 5200));
   }, true);
   const soltar = e => {
@@ -112,10 +83,10 @@ const pista = (cont, sel, opt) => {
     const g = gesto; gesto = null; sup = true; setTimeout(() => sup = false, 60);
     const dest = g.movido ? masCerca(S.x) : g.item;
     mw.set(0); ms.tune(TEMBLOR); ms.set(1); ms.kick(1.6);
-    if (dest && !dest.classList.contains('lm-on')) { deja = true; opt.elegir(dest); deja = false; vivoHasta = performance.now() + 700; }
+    if (dest && !dest.classList.contains('lm-on')) { deja = true; opt.elegir(dest); deja = false; }
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const d2 = dest && dest.isConnected ? dest : cont.querySelector(sel + '.lm-on');
-      mx.tune(TEMBLOR); mx.set(cx(d2));
+      mx.tune(TEMBLOR); mx.set(cx(d2)); mW.set(anchoDe(d2)); setTimeout(() => { if (lente && d2.isConnected) { mx.set(cx(d2)); mW.set(anchoDe(d2)); } }, 380);
       setTimeout(() => { if (gesto) return; ml.tune(BAJA); ml.set(0); ml.fin = () => { if (!gesto && S.lift < .02) quitar(); ml.fin = null; }; }, 260);
     }));
   };
@@ -163,22 +134,22 @@ const hoja = h => {
 
 /* ---------- 3. lente fija que recorre una lista vertical (escala del ánimo) ---------- */
 const escala = capa => {
-  let lente = null, g = null, Y = 0, lift = 0, sy = 1, vivoHasta = 0;
+  let lente = null, g = null, Y = 0, lift = 0, sy = 1;
   const lista = () => capa.querySelector('.lm-nv')?.parentElement;
   const orbes = () => [...capa.querySelectorAll('.lm-nv')].map(b => { const o = b.querySelector('.lm-orb') || b; const r = o.getBoundingClientRect(), rb = b.getBoundingClientRect(); return { b, x: rb.left + 14 + 22, y: rb.top + rb.height / 2 }; });
-  const S = 78, X = () => orbes()[0]?.x || 50;
-  const copiar = () => { const l = lista(); if (!l || !lente) return; const r = l.getBoundingClientRect(); const c = l.cloneNode(true); c.style.cssText = `position:absolute;margin:0;width:${r.width}px;left:${r.left}px;top:${r.top}px`; lente.mundo.replaceChildren(c); };
-  const pinta = () => { if (!lente) return; if (performance.now() < vivoHasta) copiar(); const s = .5 + .5 * lift; lente.el.style.transform = `translate(${X() - S / 2}px,${Y - S / 2}px) scale(${s / Math.sqrt(sy)},${s * sy})`; lente.el.style.opacity = Math.min(1, lift * 2);
-    lente.mundo.style.transformOrigin = '0 0'; lente.mundo.style.transform = `translate(${S / 2}px,${S / 2}px) scale(${1 + .34 * lift}) translate(${-X()}px,${-Y}px)`; };
+  const S = 64, X = () => orbes()[0]?.x || 50;
+  const orbEl = b => b.querySelector('.lm-orb') || b.firstElementChild;
+  const pinta = () => { if (!lente) return; const s = .5 + .5 * lift; lente.el.style.transform = `translate(${X() - S / 2}px,${Y - S / 2}px) scale(${s / Math.sqrt(sy)},${s * sy})`; lente.el.style.opacity = Math.min(1, lift * 2);
+    orbes().forEach(o => { const e = orbEl(o.b); if (e) e.style.scale = 1 + .32 * lift * Math.max(0, 1 - Math.abs(o.y - Y) / 46); }); };
   const mY = muelle(0, SIGUE, v => { Y = v; pinta(); }), mL = muelle(0, SUBE, v => { lift = v; pinta(); }), mS = muelle(1, TEMBLOR, v => { sy = v; pinta(); });
   const crear = () => { const el = D.createElement('div'); el.className = 'lm-cr-flens'; el.style.cssText += `;left:0;top:0;width:${S}px;height:${S}px`;
-    const stage = D.createElement('div'); stage.className = 'lm-cr-stage'; stage.style.background = 'var(--bg)'; stage.style.filter = `url(#${mapa(S, S, S / 2, 16)})`; const mundo = D.createElement('div'); mundo.style.position = 'absolute'; mundo.style.left = '0'; mundo.style.top = '0'; mundo.style.width = '1px'; stage.appendChild(mundo);
-    const vidrio = D.createElement('div'); vidrio.style.cssText = 'position:absolute;inset:0;border-radius:inherit'; vidrio.innerHTML = RIM; el.append(stage, vidrio); D.body.appendChild(el); lente = { el, mundo }; copiar(); };
+
+    el.innerHTML = RIM; D.body.appendChild(el); lente = { el }; };
   const cerca = y => orbes().reduce((a, o) => Math.abs(o.y - y) < Math.abs(a.y - y) ? o : a);
-  capa.addEventListener('pointerdown', e => { const b = e.target.closest('.lm-nv'); if (!b) return; e.preventDefault(); if (!lente) crear(); const o = orbes().find(o => o.b === b); mY.set(o.y, !g && lift < .05); g = { y0: e.clientY, a: o.y, ly: e.clientY, t: performance.now() }; mL.tune(SUBE); mL.set(1); copiar(); }, true);
+  capa.addEventListener('pointerdown', e => { const b = e.target.closest('.lm-nv'); if (!b) return; e.preventDefault(); if (!lente) crear(); const o = orbes().find(o => o.b === b); mY.set(o.y, !g && lift < .05); g = { y0: e.clientY, a: o.y, ly: e.clientY, t: performance.now() }; mL.tune(SUBE); mL.set(1); }, true);
   capa.addEventListener('pointermove', e => { if (!g) return; const now = performance.now(), v = (e.clientY - g.ly) / Math.max(.001, (now - g.t) / 1000); g.ly = e.clientY; g.t = now; const os = orbes(); let y = g.a + (e.clientY - g.y0); const a = os[0].y, z = os.at(-1).y; if (y < a) y = a - Math.sqrt(a - y) * 3; if (y > z) y = z + Math.sqrt(y - z) * 3; mY.tune(SIGUE); mY.set(y); mS.tune(TEMBLOR); mS.set(1 + Math.min(.2, Math.abs(v) / 5000)); }, true);
-  const up = e => { if (!g) return; g = null; sup = true; setTimeout(() => sup = false, 80); const o = cerca(Y); mS.set(1); mS.kick(1.4); permite = true; o.b.click(); permite = false; vivoHasta = performance.now() + 500;
-    requestAnimationFrame(() => requestAnimationFrame(() => { const n = cerca(Y); mY.tune(TEMBLOR); mY.set(n.y); setTimeout(() => { if (g) return; mL.tune(BAJA); mL.set(0); mL.fin = () => { if (!g) { lente?.el.remove(); lente = null; } }; }, 380); })); };
+  const up = e => { if (!g) return; g = null; sup = true; setTimeout(() => sup = false, 80); const o = cerca(Y); mS.set(1); mS.kick(1.4); permite = true; o.b.click(); permite = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => { const n = cerca(Y); mY.tune(TEMBLOR); mY.set(n.y); setTimeout(() => { if (g) return; mL.tune(BAJA); mL.set(0); mL.fin = () => { if (!g) { lente?.el.remove(); lente = null; capa.querySelectorAll('.lm-nv').forEach(b => { const e = orbEl(b); if (e) e.style.scale = ''; }); } }; }, 380); })); };
   let permite = false, sup = false;
   capa.addEventListener('pointerup', up, true);
   capa.addEventListener('click', e => { if (e.target.closest('.lm-nv') && !permite && (sup || g)) { e.stopPropagation(); e.preventDefault(); } }, true);
@@ -189,20 +160,16 @@ const sueno = fila => {
   const su = fila.querySelector('#lm-su'); if (!su) return;
   const MIN = 3, MAX = 12; let val = parseFloat(su.textContent.replace(',', '.')) || 7.5;
   const sl = D.createElement('div'); sl.className = 'lm-cr-slider';
-  sl.innerHTML = `<div class="lm-cr-track"></div><div class="lm-cr-fill"></div><div class="lm-cr-ticks"><span>3 h</span><span>6 h</span><span>9 h</span><span>12 h</span></div><div class="lm-cr-knob"><div class="lm-cr-stage"></div><div class="lm-cr-rim"></div></div>`;
+  sl.innerHTML = `<div class="lm-cr-track"></div><div class="lm-cr-fill"></div><div class="lm-cr-ticks"><span>3 h</span><span>6 h</span><span>9 h</span><span>12 h</span></div><div class="lm-cr-knob"><div class="lm-cr-rim"></div></div>`;
   fila.after(sl);
-  const knob = sl.querySelector('.lm-cr-knob'), stage = knob.querySelector('.lm-cr-stage'), rim = knob.querySelector('.lm-cr-rim'), fill = sl.querySelector('.lm-cr-fill');
+  const knob = sl.querySelector('.lm-cr-knob'), rim = knob.querySelector('.lm-cr-rim'), fill = sl.querySelector('.lm-cr-fill');
   let x = 0, lift = 0, sx = 1, g = null;
   const W = () => sl.offsetWidth, aX = v => (v - MIN) / (MAX - MIN) * W();
-  const copia = () => { const c = D.createElement('div'); c.style.cssText = `position:absolute;left:0;top:0;width:${W()}px;height:44px`; c.innerHTML = sl.querySelector('.lm-cr-track').outerHTML + fill.outerHTML; stage.replaceChildren(c); return c; };
-  let mundo = null;
-  stage.style.filter = `url(#${mapa(40, 28, 14, 9)})`; stage.style.background = 'var(--card)';
-  const pinta = () => { knob.style.left = x + 'px'; fill.style.width = x + 'px'; const s = 1 + .55 * lift; knob.style.transform = `scale(${s * sx},${s / Math.sqrt(sx)})`; knob.style.background = `rgba(255,255,255,${1 - .82 * lift})`; stage.style.opacity = lift; rim.style.opacity = lift;
-    if (mundo) { mundo.querySelector('.lm-cr-fill').style.width = x + 'px'; mundo.style.transformOrigin = '0 0'; mundo.style.transform = `translate(20px,14px) scale(${1 + .5 * lift}) translate(${-x}px,-22px)`; } };
+  const pinta = () => { knob.style.left = x + 'px'; fill.style.width = x + 'px'; const s = 1 + .55 * lift; knob.style.transform = `scale(${s * sx},${s / Math.sqrt(sx)})`; knob.style.background = `rgba(255,255,255,${1 - .82 * lift})`; rim.style.opacity = lift; };
   const mX = muelle(aX(val), SIGUE, v => { x = v; pinta(); }), mL = muelle(0, SUBE, v => { lift = v; pinta(); }), mS = muelle(1, TEMBLOR, v => { sx = v; pinta(); });
   requestAnimationFrame(() => mX.set(aX(Math.min(MAX, Math.max(MIN, val))), true));
   const aplicar = nv => { nv = Math.round(nv * 2) / 2; nv = Math.min(MAX, Math.max(MIN, nv)); const d = Math.round((nv - val) * 2); const btn = fila.querySelector(`[data-a="s"][data-v="${d > 0 ? '.5' : '-.5'}"]`); for (let i = 0; i < Math.abs(d); i++) btn?.click(); val = nv; };
-  sl.addEventListener('pointerdown', e => { e.preventDefault(); sl.setPointerCapture(e.pointerId); mundo = copia(); const r = sl.getBoundingClientRect(), s = r.width / W(); g = { x0: e.clientX, a: x, s, lx: e.clientX, t: performance.now() }; mL.tune(SUBE); mL.set(1); });
+  sl.addEventListener('pointerdown', e => { e.preventDefault(); sl.setPointerCapture(e.pointerId); const r = sl.getBoundingClientRect(), s = r.width / W(); g = { x0: e.clientX, a: x, s, lx: e.clientX, t: performance.now() }; mL.tune(SUBE); mL.set(1); });
   sl.addEventListener('pointermove', e => { if (!g) return; const now = performance.now(), v = (e.clientX - g.lx) / g.s / Math.max(.001, (now - g.t) / 1000); g.lx = e.clientX; g.t = now; let nx = g.a + (e.clientX - g.x0) / g.s; if (nx < 0) nx = -Math.sqrt(-nx) * 3; if (nx > W()) nx = W() + Math.sqrt(nx - W()) * 3; mX.tune(SIGUE); mX.set(nx); mS.set(1 + Math.min(.25, Math.abs(v) / 3000)); aplicar(MIN + Math.min(W(), Math.max(0, nx)) / W() * (MAX - MIN)); });
   const up = () => { if (!g) return; g = null; mX.tune(TEMBLOR); mX.set(aX(val)); mS.set(1); mS.kick(1.5); setTimeout(() => { if (!g) { mL.tune(BAJA); mL.set(0); } }, 300); };
   sl.addEventListener('pointerup', up); sl.addEventListener('pointercancel', up);
@@ -214,8 +181,8 @@ const sueno = fila => {
 const montar = () => {
   if (L.rm) return;
   const barra = D.querySelector('.lm-barra');
-  if (barra && !barra.dataset.lg) { barra.dataset.lg = 1; pista(barra, '.lm-tab', { over: 9, spread: 22, zoom: .16, swell: .035, elegir: t => t.click() }); }
-  D.querySelectorAll('.lm-seg').forEach(s => { if (s.dataset.lg) return; s.dataset.lg = 1; pista(s, 'span', { over: 7, spread: 18, zoom: .14, swell: .03, elegir: t => t.click() }); });
+  if (barra && !barra.dataset.lg) { barra.dataset.lg = 1; pista(barra, '.lm-tab', { over: 3, spread: 8, zoom: .16, swell: .035, elegir: t => t.click() }); }
+  D.querySelectorAll('.lm-seg').forEach(s => { if (s.dataset.lg) return; s.dataset.lg = 1; pista(s, 'span', { over: 3, spread: 8, zoom: .14, swell: .03, elegir: t => t.click() }); });
   D.querySelectorAll('.lm-sw').forEach(s => { if (s.dataset.lg) return; s.dataset.lg = 1; interruptor(s); });
   D.querySelectorAll('.lm-top .lm-rb:not(.lm-vacio),.lm-top-campo .lm-rb,.lm-cta .lm-mas,[data-a="apuntar"] .lm-mas').forEach(b => { if (b.dataset.lg) return; b.dataset.lg = 1; boton(b); });
   D.querySelectorAll('.lm-hoja').forEach(h => { if (h.dataset.lg) return; h.dataset.lg = 1; hoja(h); });

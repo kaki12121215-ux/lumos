@@ -2,14 +2,14 @@
 
 Pon luz a lo que sientes. App web privada de bienestar emocional (PWA) para instalar en el iPhone desde Safari.
 
-- Versión 1.4.0
+- Versión 1.4.1
 - Funciona sin conexión. Los datos solo se guardan en el móvil (claves `lumos:`).
 - Abrir: https://kaki12121215-ux.github.io/lumos/
 
 ## Qué hay dentro
 
 - `index.html`: la página que se abre.
-- `sw.js`: el service worker, que guarda la app para usarla sin conexión (caché `lumos-1.4.0`).
+- `sw.js`: el service worker, que guarda la app para usarla sin conexión (caché `lumos-1.4.1`).
 - `manifest.webmanifest`: nombre, colores e iconos para instalarla en el iPhone.
 - `css/lumos.css`: todo el diseño, en claro y en oscuro.
 - `js/`: el código, sin librerías externas.
